@@ -37,8 +37,7 @@ async function ensureSuperAdminAccount() {
     await User.create({
       gmail: SUPER_ADMIN_GMAIL,
       password: passwordHash,
-      company: null,
-      project: [],
+      assignments: [],
       is_active: true,
       isAdmin: true,
     });
