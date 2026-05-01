@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medical_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/medical_management
+      - AUTH_SECRET=${AUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - SUPER_ADMIN_GMAIL=${SUPER_ADMIN_GMAIL}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - medical_net
+
+  mongo:
+    image: mongo:7
+    container_name: medical_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"           # remove this line in production
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=medical_management
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - medical_net
+
+volumes:
+  mongo_data:
+
+networks:
+  medical_net:
+    driver: bridge
