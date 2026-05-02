@@ -35,11 +35,14 @@ export function PageShell({ user, title, description, children, action }: PageSh
           <div className="mx-auto w-full max-w-7xl space-y-5">
             {/* Page header */}
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-xl font-bold text-zinc-900 md:text-2xl">{title}</h1>
-                <p className="mt-1 text-sm text-zinc-500">{description}</p>
+              <div className="flex items-start gap-3">
+                <span className="mt-1 hidden h-7 w-[3px] shrink-0 rounded-full bg-[oklch(0.40_0.19_258)] sm:block" />
+                <div>
+                  <h1 className="text-[1.125rem] font-bold tracking-tight text-zinc-900 md:text-xl">{title}</h1>
+                  <p className="mt-0.5 text-xs font-normal text-zinc-400">{description}</p>
+                </div>
               </div>
-              {action ? <div className="flex-shrink-0">{action}</div> : null}
+              {action ? <div className="shrink-0">{action}</div> : null}
             </div>
             {children}
           </div>

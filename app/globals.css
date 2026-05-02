@@ -8,7 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -48,53 +48,54 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Medical Management - Design Tokens */
+/* Medical Management — Design Tokens */
 :root {
-  /* Core brand: deep medical blue */
-  --mm-primary: oklch(0.44 0.16 248);
-  --mm-primary-light: oklch(0.92 0.04 248);
+  /* Brand: deep indigo-blue, more distinctive than generic sky blue */
+  --mm-primary: oklch(0.40 0.19 258);
+  --mm-primary-hover: oklch(0.34 0.19 258);
+  --mm-primary-light: oklch(0.93 0.04 255);
   --mm-primary-fg: oklch(0.99 0 0);
 
-  /* Medical teal accent */
-  --mm-teal: oklch(0.54 0.13 195);
-  --mm-teal-light: oklch(0.93 0.05 195);
+  /* Medical teal — slightly deeper */
+  --mm-teal: oklch(0.50 0.14 192);
+  --mm-teal-light: oklch(0.94 0.05 192);
 
-  /* Surface tones */
-  --mm-surface: oklch(0.975 0.007 240);
-  --mm-surface-muted: oklch(0.965 0.01 235);
+  /* Surface tones — warmer, less "cool gray AI look" */
+  --mm-surface: oklch(0.978 0.004 80);
 
   /* shadcn/base-ui palette */
-  --background: oklch(0.975 0.007 240);
-  --foreground: oklch(0.22 0.03 248);
+  --background: oklch(0.978 0.004 80);
+  --foreground: oklch(0.18 0.025 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 248);
+  --card-foreground: oklch(0.18 0.025 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 248);
-  --primary: oklch(0.44 0.16 248);
+  --popover-foreground: oklch(0.18 0.025 250);
+  --primary: oklch(0.40 0.19 258);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.02 235);
-  --secondary-foreground: oklch(0.33 0.04 248);
-  --muted: oklch(0.965 0.01 237);
-  --muted-foreground: oklch(0.50 0.03 248);
+  --secondary: oklch(0.95 0.015 240);
+  --secondary-foreground: oklch(0.32 0.04 252);
+  --muted: oklch(0.965 0.008 240);
+  --muted-foreground: oklch(0.50 0.028 250);
   --accent: oklch(0.93 0.05 200);
-  --accent-foreground: oklch(0.28 0.07 218);
+  --accent-foreground: oklch(0.26 0.07 215);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.89 0.02 242);
-  --input: oklch(0.89 0.02 242);
-  --ring: oklch(0.65 0.13 240);
+  --border: oklch(0.90 0.015 245);
+  --input: oklch(0.90 0.015 245);
+  --ring: oklch(0.62 0.14 255);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
+  /* 8px base radius — sharper feels more intentional */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.99 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: oklch(0.928 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 }
 
@@ -138,10 +139,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Subtle medical gradient background */
     background-image:
-      radial-gradient(ellipse at 0% 0%, oklch(0.62 0.13 248 / 0.08), transparent 45%),
-      radial-gradient(ellipse at 100% 10%, oklch(0.54 0.13 195 / 0.07), transparent 38%);
+      radial-gradient(ellipse 60% 40% at 0% 0%, oklch(0.62 0.13 255 / 0.06), transparent 50%),
+      radial-gradient(ellipse 50% 35% at 100% 8%, oklch(0.50 0.14 192 / 0.05), transparent 45%);
   }
   html {
     @apply font-sans;
@@ -151,7 +151,8 @@
 @layer components {
   /* ── Surface cards ── */
   .mm-card {
-    @apply rounded-xl border border-zinc-200/80 bg-white shadow-sm;
+    @apply rounded-xl border border-zinc-200/70 bg-white;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   }
 
   .mm-card-soft {
@@ -164,48 +165,48 @@
 
   /* ── Form controls ── */
   .mm-input {
-    @apply h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 shadow-sm outline-none transition
-      focus:border-sky-400 focus:ring-2 focus:ring-sky-100
-      disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400
-      placeholder:text-zinc-400;
+    @apply h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-900 shadow-none outline-none transition-shadow duration-150
+      focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100
+      disabled:cursor-not-allowed disabled:bg-zinc-50/80 disabled:text-zinc-400
+      placeholder:text-zinc-400 placeholder:font-normal;
   }
 
   .mm-input-readonly {
-    @apply h-10 w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-500;
+    @apply h-9 w-full rounded-lg border border-zinc-100 bg-zinc-50 px-3 text-sm font-normal text-zinc-400 select-none;
   }
 
-  /* Select and file inputs need pointer cursor */
   select.mm-input {
     @apply cursor-pointer;
   }
 
   /* ── Buttons ── */
   .mm-btn-primary {
-    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-4 text-sm font-medium text-white shadow-sm transition
-      hover:bg-sky-700 active:bg-sky-800
-      disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[oklch(0.40_0.19_258)] px-4 text-sm font-semibold tracking-tight text-white transition-colors duration-150
+      hover:bg-[oklch(0.34_0.19_258)] active:bg-[oklch(0.30_0.19_258)]
+      disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .mm-btn-secondary {
-    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 shadow-sm transition
-      hover:bg-zinc-50 hover:border-zinc-400
-      disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors duration-150
+      hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-900
+      disabled:cursor-not-allowed disabled:opacity-50;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   }
 
   .mm-btn-ghost {
-    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium text-zinc-600 transition
-      hover:bg-zinc-100 hover:text-zinc-900
-      disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium text-zinc-500 transition-colors duration-150
+      hover:bg-zinc-100 hover:text-zinc-800
+      disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .mm-btn-danger {
-    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition
-      hover:bg-red-700
-      disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-red-600 px-4 text-sm font-semibold tracking-tight text-white transition-colors duration-150
+      hover:bg-red-700 active:bg-red-800
+      disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .mm-btn-sm {
-    @apply h-7 px-3 text-xs;
+    @apply h-7 px-2.5 text-xs;
   }
 
   /* ── Table ── */
@@ -214,11 +215,11 @@
   }
 
   .mm-table thead {
-    @apply border-b border-zinc-200 bg-zinc-50/80;
+    @apply border-b border-zinc-200 bg-zinc-50;
   }
 
   .mm-table thead th {
-    @apply px-3 py-2.5 text-left text-xs font-semibold tracking-wide text-zinc-500 whitespace-nowrap;
+    @apply px-3 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-zinc-400 whitespace-nowrap;
   }
 
   .mm-table tbody {
@@ -226,7 +227,7 @@
   }
 
   .mm-table tbody tr {
-    @apply transition-colors odd:bg-white even:bg-zinc-50/30 hover:bg-sky-50/50;
+    @apply transition-colors duration-75 hover:bg-indigo-50/30;
   }
 
   .mm-table tbody td {
@@ -235,10 +236,10 @@
 
   /* ── Section header ── */
   .mm-section-title {
-    @apply text-base font-semibold text-zinc-900;
+    @apply text-[0.9375rem] font-semibold tracking-tight text-zinc-900;
   }
 
   .mm-section-desc {
-    @apply mt-0.5 text-sm text-zinc-500;
+    @apply mt-0.5 text-xs font-normal text-zinc-400;
   }
 }

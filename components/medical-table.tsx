@@ -267,9 +267,9 @@ function MedicalForm({
 
       {/* Period fields */}
       {includePeriodInputs ? (
-        <fieldset className="space-y-3 rounded-xl border border-sky-200 bg-sky-50/30 p-4">
-          <legend className="flex items-center gap-1.5 px-1 text-xs font-semibold text-sky-700 uppercase tracking-wide">
-            <Calendar size={12} />
+        <fieldset className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/20 p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-indigo-500">
+            <Calendar size={11} />
             Dữ liệu kỳ — Tháng {selectedMonth} / Tuần {selectedWeek}
           </legend>
           <div className="grid gap-3 md:grid-cols-2">
@@ -348,8 +348,8 @@ export function MedicalTable({
             <p className="mm-section-desc">Quản lý hồ sơ vật tư và theo dõi sử dụng theo kỳ.</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-              <Calendar size={12} />
+            <span className="flex items-center gap-1.5 rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600">
+              <Calendar size={11} />
               Tháng {selectedMonth} — Tuần {selectedWeek}
             </span>
             <button
@@ -357,7 +357,7 @@ export function MedicalTable({
               onClick={() => setCreateOpen(true)}
               className="mm-btn-primary"
             >
-              <Plus size={15} />
+              <Plus size={14} />
               Thêm mới
             </button>
           </div>
@@ -401,7 +401,7 @@ export function MedicalTable({
                   <Cell value={medical.hang_sx} />
                   <Cell value={medical.don_gia} maxWidth="max-w-32" className="text-right font-mono text-xs" />
                   <td title={medical.company || undefined} className="max-w-40 truncate">
-                    <span className="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                    <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                       {medical.company || "—"}
                     </span>
                   </td>
@@ -468,15 +468,15 @@ export function MedicalTable({
           maxWidth="max-w-3xl"
         >
           <div className="mb-4 space-y-2">
-            <div className="flex items-start gap-2 rounded-lg bg-sky-50 px-3 py-2.5 text-xs text-sky-700">
-              <Info size={13} className="mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-2 rounded-lg bg-indigo-50 px-3 py-2.5 text-xs text-indigo-700">
+              <Info size={13} className="mt-0.5 shrink-0" />
               <span>
                 Dữ liệu kỳ được lưu cho <strong>Tháng {selectedMonth} — Tuần {selectedWeek}</strong>.
               </span>
             </div>
             {!canEditAllFields ? (
               <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-                <AlertTriangle size={13} className="mt-0.5 flex-shrink-0" />
+                <AlertTriangle size={13} className="mt-0.5 shrink-0" />
                 <span>
                   Bạn chỉ được chỉnh sửa: <strong>Quy Cách, ĐVT, SL Sử Dụng, TSTK, Ghi Chú</strong>.
                 </span>

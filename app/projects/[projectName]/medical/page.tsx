@@ -499,30 +499,30 @@ export default async function ProjectMedicalPage({
       {/* Import status banner */}
       {query.importMessage ? (
         <div
-          className={`flex items-center gap-2 rounded-xl border p-3 text-sm ${
+          className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
             query.importStatus === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-red-200 bg-red-50 text-red-700"
           }`}
         >
           {query.importStatus === "success" ? (
-            <CheckCircle2 size={15} className="shrink-0" />
+            <CheckCircle2 size={14} className="shrink-0" />
           ) : (
-            <XCircle size={15} className="shrink-0" />
+            <XCircle size={14} className="shrink-0" />
           )}
           {query.importMessage}
         </div>
       ) : null}
 
-      <section className="mm-card p-4">
+      <section className="mm-card px-4 py-3.5">
         <form className="flex flex-wrap items-end gap-2 md:flex-nowrap">
           <div className="relative min-w-48 flex-1">
-            <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-zinc-400" />
+            <Search size={13} className="absolute top-1/2 left-3 -translate-y-1/2 text-zinc-400" />
             <input
               name="q"
               defaultValue={q}
               placeholder="Tìm theo mã, tên, mã hiệu..."
-              className="mm-input pl-9"
+              className="mm-input pl-8"
             />
           </div>
           <select
@@ -560,7 +560,7 @@ export default async function ProjectMedicalPage({
             ))}
           </select>
           <button type="submit" className="mm-btn-primary shrink-0">
-            <Search size={14} />
+            <Search size={13} />
             Tìm kiếm
           </button>
         </form>
@@ -570,10 +570,10 @@ export default async function ProjectMedicalPage({
         <div className="flex justify-end">
           <a
             href={`/api/projects/${encodeURIComponent(resolvedProjectName)}/medical/export?month=${monthFilter}&week=${weekFilter}&company=${encodeURIComponent(companyFilter)}&q=${encodeURIComponent(q)}`}
-            className="mm-btn-secondary flex items-center gap-1.5 text-sm"
+            className="mm-btn-secondary text-xs"
             download
           >
-            <FileSpreadsheet size={15} />
+            <FileSpreadsheet size={13} />
             Xuất Excel — Tháng {monthFilter} / Tuần {weekFilter}
           </a>
         </div>
@@ -616,27 +616,31 @@ export default async function ProjectMedicalPage({
         selectedWeek={weekFilter}
       />
 
-      <section className="mm-card p-4">
-        <div className="flex items-center justify-between gap-4 text-sm">
-          <span className="text-zinc-500">
-            Trang <strong className="text-zinc-800">{page}</strong> /{" "}
-            <strong className="text-zinc-800">{totalPages}</strong> —{" "}
-            <strong className="text-zinc-800">{totalCount}</strong> bản ghi
+      <section className="mm-card px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-xs text-zinc-400">
+            Trang{" "}
+            <span className="font-semibold text-zinc-700">{page}</span>
+            {" "}/{" "}
+            <span className="font-semibold text-zinc-700">{totalPages}</span>
+            {" — "}
+            <span className="font-semibold text-zinc-700">{totalCount}</span>
+            {" "}bản ghi
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <a
-              className={`mm-btn-secondary mm-btn-sm flex items-center gap-1 ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
+              className={`mm-btn-secondary mm-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
               href={`${basePath}?q=${encodeURIComponent(q)}&company=${encodeURIComponent(companyFilter)}&month=${monthFilter}&week=${weekFilter}&page=${Math.max(1, page - 1)}`}
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={13} />
               Trước
             </a>
             <a
-              className={`mm-btn-secondary mm-btn-sm flex items-center gap-1 ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
+              className={`mm-btn-secondary mm-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
               href={`${basePath}?q=${encodeURIComponent(q)}&company=${encodeURIComponent(companyFilter)}&month=${monthFilter}&week=${weekFilter}&page=${Math.min(totalPages, page + 1)}`}
             >
               Sau
-              <ChevronRight size={14} />
+              <ChevronRight size={13} />
             </a>
           </div>
         </div>
