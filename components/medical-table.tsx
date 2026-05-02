@@ -64,6 +64,22 @@ const FIELD_LABELS: Record<string, string> = {
   ghi_chu: "Ghi Chú",
 };
 
+function Cell({
+  value,
+  className,
+  maxWidth = "max-w-40",
+}: {
+  value: string;
+  className?: string;
+  maxWidth?: string;
+}) {
+  return (
+    <td title={value || undefined} className={`truncate ${maxWidth} ${className ?? ""}`}>
+      {value || "—"}
+    </td>
+  );
+}
+
 function PercentBar({ value }: { value: string }) {
   const num = parseFloat(value);
   if (!value || isNaN(num)) return <span className="text-zinc-400">—</span>;
@@ -200,6 +216,7 @@ function MedicalForm({
           </FormField>
           <FormField label={FIELD_LABELS.don_gia}>
             <input
+              type="number"
               name="don_gia"
               defaultValue={defaultRow?.don_gia ?? ""}
               placeholder="Đơn giá"
@@ -209,6 +226,7 @@ function MedicalForm({
           </FormField>
           <FormField label={FIELD_LABELS.dinh_muc}>
             <input
+              type="number"
               name="dinh_muc"
               defaultValue={defaultRow?.dinh_muc ?? ""}
               placeholder="Định mức"
@@ -236,6 +254,7 @@ function MedicalForm({
           </FormField>
           <FormField label={FIELD_LABELS.so_luong}>
             <input
+              type="number"
               name="so_luong"
               defaultValue={defaultRow?.so_luong ?? ""}
               placeholder="Số lượng"
@@ -253,9 +272,10 @@ function MedicalForm({
             <Calendar size={12} />
             Dữ liệu kỳ — Tháng {selectedMonth} / Tuần {selectedWeek}
           </legend>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2">
             <FormField label={FIELD_LABELS.so_luong_su_dung}>
               <input
+                type="number"
                 name="so_luong_su_dung"
                 defaultValue={defaultRow?.so_luong_su_dung ?? ""}
                 placeholder="SL đã sử dụng"
@@ -270,15 +290,16 @@ function MedicalForm({
                 className="mm-input-readonly"
               />
             </FormField>
-            <FormField label={FIELD_LABELS.tstk}>
-              <input
-                name="tstk"
-                defaultValue={defaultRow?.tstk ?? ""}
-                placeholder="TSTK"
-                className="mm-input"
-              />
-            </FormField>
           </div>
+          <FormField label={FIELD_LABELS.tstk}>
+            <textarea
+              name="tstk"
+              defaultValue={defaultRow?.tstk ?? ""}
+              placeholder="TSTK..."
+              rows={3}
+              className="mm-input resize-y"
+            />
+          </FormField>
           <FormField label={FIELD_LABELS.ghi_chu}>
             <input
               name="ghi_chu"
@@ -350,55 +371,47 @@ export function MedicalTable({
                 <th>{FIELD_LABELS.ma_nhom}</th>
                 <th>{FIELD_LABELS.ma_vtyt_bv}</th>
                 <th>{FIELD_LABELS.ten_vtyt_bv}</th>
-                <th>{FIELD_LABELS.quy_cach}</th>
                 <th>{FIELD_LABELS.don_vi_tinh}</th>
                 <th>{FIELD_LABELS.ma_hieu}</th>
                 <th>{FIELD_LABELS.hang_sx}</th>
-                <th>{FIELD_LABELS.nuoc_sx}</th>
                 <th>{FIELD_LABELS.don_gia}</th>
                 <th>{FIELD_LABELS.company}</th>
                 <th>{FIELD_LABELS.dinh_muc}</th>
                 <th>{FIELD_LABELS.so_luong}</th>
                 <th>{FIELD_LABELS.so_luong_su_dung}</th>
                 <th>{FIELD_LABELS.phan_tram}</th>
-                <th>{FIELD_LABELS.tstk}</th>
-                <th>{FIELD_LABELS.ghi_chu}</th>
-                <th className="text-right">Thao tác</th>
+                <th className="sticky right-0 bg-zinc-50 text-right shadow-[-1px_0_0_0_#e4e4e7]">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {medicalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={17} className="py-10 text-center text-zinc-400">
+                  <td colSpan={13} className="py-10 text-center text-zinc-400">
                     Không có bản ghi nào.
                   </td>
                 </tr>
               ) : null}
               {medicalRows.map((medical) => (
-                <tr key={medical.id}>
-                  <td className="text-zinc-500">{medical.ma_nhom || "—"}</td>
-                  <td className="font-mono text-xs text-sky-700">{medical.ma_vtyt_bv || "—"}</td>
-                  <td className="max-w-48 font-medium text-zinc-800">{medical.ten_vtyt_bv || "—"}</td>
-                  <td>{medical.quy_cach || "—"}</td>
-                  <td>{medical.don_vi_tinh || "—"}</td>
-                  <td className="font-mono text-xs">{medical.ma_hieu || "—"}</td>
-                  <td>{medical.hang_sx || "—"}</td>
-                  <td>{medical.nuoc_sx || "—"}</td>
-                  <td className="text-right font-mono text-xs">{medical.don_gia || "—"}</td>
-                  <td>
+                <tr key={medical.id} className="whitespace-nowrap">
+                  <Cell value={medical.ma_nhom} className="text-zinc-500" />
+                  <Cell value={medical.ma_vtyt_bv} className="font-mono text-xs text-sky-700" />
+                  <Cell value={medical.ten_vtyt_bv} maxWidth="max-w-56" className="font-medium text-zinc-800" />
+                  <Cell value={medical.don_vi_tinh} maxWidth="max-w-24" />
+                  <Cell value={medical.ma_hieu} className="font-mono text-xs" />
+                  <Cell value={medical.hang_sx} />
+                  <Cell value={medical.don_gia} maxWidth="max-w-32" className="text-right font-mono text-xs" />
+                  <td title={medical.company || undefined} className="max-w-40 truncate">
                     <span className="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
                       {medical.company || "—"}
                     </span>
                   </td>
-                  <td className="text-right font-mono text-xs">{medical.dinh_muc || "—"}</td>
-                  <td className="text-right font-mono text-xs">{medical.so_luong || "—"}</td>
-                  <td className="text-right font-mono text-xs">{medical.so_luong_su_dung || "—"}</td>
-                  <td>
+                  <Cell value={medical.dinh_muc} maxWidth="max-w-32" className="text-right font-mono text-xs" />
+                  <Cell value={medical.so_luong} maxWidth="max-w-32" className="text-right font-mono text-xs" />
+                  <Cell value={medical.so_luong_su_dung} maxWidth="max-w-32" className="text-right font-mono text-xs" />
+                  <td className="max-w-32">
                     <PercentBar value={medical.phan_tram} />
                   </td>
-                  <td>{medical.tstk || "—"}</td>
-                  <td className="max-w-32 truncate text-zinc-500">{medical.ghi_chu || "—"}</td>
-                  <td>
+                  <td className="sticky right-0 bg-white shadow-[-1px_0_0_0_#e4e4e7]">
                     <div className="flex justify-end gap-1.5">
                       <button
                         type="button"

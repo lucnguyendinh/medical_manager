@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Activity, Stethoscope, DollarSign, Building2, ArrowRight, Plus, Upload, CheckCircle2, XCircle } from "lucide-react";
+import { Activity, Stethoscope, DollarSign, Building2, ArrowRight, Plus, Upload, CheckCircle2, XCircle, SlidersHorizontal } from "lucide-react";
 
 import { requireUser, requireAdmin, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
@@ -14,13 +14,23 @@ import { StatCard } from "@/components/ui/stat-card";
 import { FormField } from "@/components/ui/form-field";
 import { CsvImportCard } from "@/components/ui/csv-import-card";
 import { SubmitButton } from "@/components/submit-button";
+import { DashboardCharts } from "@/components/dashboard-charts";
 
 export default async function ProjectDashboardPage({
   params,
   searchParams,
 }: {
   params: Promise<{ projectName: string }>;
-  searchParams: Promise<{ importStatus?: string; importMessage?: string }>;
+  searchParams: Promise<{
+    importStatus?: string;
+    importMessage?: string;
+    month?: string;
+    week?: string;
+    company?: string;
+    ma_nhom?: string;
+    hang_sx?: string;
+    period_mode?: string;
+  }>;
 }) {
   const user = await requireUser();
   const { projectName } = await params;
@@ -40,12 +50,31 @@ export default async function ProjectDashboardPage({
     notFound();
   }
 
-  const scopeQuery = user.isAdmin
+  // --- Filter params ---
+  const filterMonth = query.month ? Number(query.month) : null;
+  const filterWeek = query.week ? Number(query.week) : null;
+  const filterCompany = (query.company ?? "").trim();
+  const filterMaNhom = (query.ma_nhom ?? "").trim();
+  const filterHangSx = (query.hang_sx ?? "").trim();
+  const periodMode = query.period_mode === "week" ? "week" : "month";
+
+  const scopeQuery: Record<string, unknown> = user.isAdmin
     ? { project: decodedProjectName, is_delete: false }
     : { project: decodedProjectName, company: { $in: userCompanies }, is_delete: false };
 
-  const [totalSupplies, distinctCompanies, avgPriceMock, companiesInProject, userCompanyDocs] =
-    await Promise.all([
+  if (filterCompany) scopeQuery.company = filterCompany;
+  if (filterMaNhom) scopeQuery.ma_nhom = filterMaNhom;
+  if (filterHangSx) scopeQuery.hang_sx = filterHangSx;
+
+  const [
+    totalSupplies,
+    distinctCompanies,
+    avgPriceMock,
+    companiesInProject,
+    userCompanyDocs,
+    distinctMaNhom,
+    distinctHangSx,
+  ] = await Promise.all([
     Medical.countDocuments(scopeQuery),
     Medical.distinct("company", scopeQuery),
     Medical.aggregate([
@@ -53,22 +82,91 @@ export default async function ProjectDashboardPage({
       {
         $group: {
           _id: null,
-          avgPrice: { $avg: { $toDouble: { $ifNull: ["$don_gia", 0] } } },
+          avgPrice: { $avg: { $convert: { input: "$don_gia", to: "double", onError: 0, onNull: 0 } } },
         },
       },
     ]),
-      user.isAdmin
-        ? ProjectCompany.find({ project: decodedProjectName })
-            .sort({ name: 1 })
-            .lean()
-        : [],
-      userCompanies.length > 0
-        ? ProjectCompany.find({ project: decodedProjectName, name: { $in: userCompanies } })
-            .sort({ name: 1 })
-            .lean()
-        : Promise.resolve([]),
-    ]);
+    user.isAdmin
+      ? ProjectCompany.find({ project: decodedProjectName }).sort({ name: 1 }).lean()
+      : [],
+    userCompanies.length > 0
+      ? ProjectCompany.find({ project: decodedProjectName, name: { $in: userCompanies } })
+          .sort({ name: 1 })
+          .lean()
+      : Promise.resolve([]),
+    Medical.distinct("ma_nhom", { project: decodedProjectName, is_delete: false, ma_nhom: { $ne: "" } }),
+    Medical.distinct("hang_sx", { project: decodedProjectName, is_delete: false, hang_sx: { $ne: "" } }),
+  ]);
+
   const encodedProjectName = encodeURIComponent(decodedProjectName);
+
+  // --- Chart aggregations ---
+
+  // Build period match conditions
+  const periodMatchConditions: Record<string, unknown>[] = [];
+  if (filterMonth !== null) periodMatchConditions.push({ "period_values.month": filterMonth });
+  if (filterWeek !== null) periodMatchConditions.push({ "period_values.week": filterWeek });
+
+  const periodUnwindPipeline = [
+    { $match: scopeQuery },
+    { $unwind: "$period_values" },
+    ...(periodMatchConditions.length > 0
+      ? [{ $match: { $and: periodMatchConditions } }]
+      : []),
+  ];
+
+  // Chart 1: Usage by period (group by month or week)
+  const groupByField = periodMode === "week" ? "$period_values.week" : "$period_values.month";
+  const usageByPeriodRaw: Array<{ _id: number; total: number }> = await Medical.aggregate([
+    ...periodUnwindPipeline,
+    {
+      $group: {
+        _id: groupByField,
+        total: { $sum: { $convert: { input: "$period_values.so_luong_su_dung", to: "double", onError: 0, onNull: 0 } } },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  const usageByPeriod = usageByPeriodRaw.map((item) => ({
+    label: periodMode === "week" ? `Tuần ${item._id}` : `T${item._id}`,
+    value: Math.round(item.total),
+  }));
+
+  // Chart 2: Top 10 supplies by SL SD
+  const topSuppliesRaw: Array<{ _id: string; total: number }> = await Medical.aggregate([
+    ...periodUnwindPipeline,
+    {
+      $group: {
+        _id: "$ten_vtyt_bv",
+        total: { $sum: { $convert: { input: "$period_values.so_luong_su_dung", to: "double", onError: 0, onNull: 0 } } },
+      },
+    },
+    { $sort: { total: -1 } },
+    { $limit: 10 },
+  ]);
+  const topSupplies = topSuppliesRaw
+    .filter((i) => i.total > 0)
+    .map((i) => ({ name: i._id || "—", value: Math.round(i.total) }));
+
+  // Chart 3: Top companies by SL SD
+  const topCompaniesRaw: Array<{ _id: string; total: number }> = await Medical.aggregate([
+    ...periodUnwindPipeline,
+    {
+      $group: {
+        _id: "$company",
+        total: { $sum: { $convert: { input: "$period_values.so_luong_su_dung", to: "double", onError: 0, onNull: 0 } } },
+      },
+    },
+    { $sort: { total: -1 } },
+    { $limit: 10 },
+  ]);
+  const topCompanies = topCompaniesRaw
+    .filter((i) => i.total > 0)
+    .map((i) => ({ name: i._id || "—", value: Math.round(i.total) }));
+
+  // Chart 4: % usage by supply (same as top 10 supplies)
+  const usagePercent = topSupplies;
 
   async function createCompanyAction(formData: FormData) {
     "use server";
@@ -397,6 +495,94 @@ export default async function ProjectDashboardPage({
           </Link>
         </div>
       </section>
+
+      {/* Dashboard filter + charts (admin only) */}
+      {user.isAdmin ? <section className="mm-card p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <SlidersHorizontal size={16} className="text-sky-600" />
+          <h2 className="mm-section-title">Biểu đồ thống kê</h2>
+        </div>
+
+        {/* Filter form */}
+        <form className="mb-6 flex flex-wrap items-end gap-2">
+          {/* Tháng */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500">Tháng</label>
+            <select name="month" defaultValue={query.month ?? ""} className="mm-input w-auto min-w-28">
+              <option value="">Tất cả</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <option key={m} value={m}>Tháng {m}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tuần */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500">Tuần</label>
+            <select name="week" defaultValue={query.week ?? ""} className="mm-input w-auto min-w-24">
+              <option value="">Tất cả</option>
+              {[1, 2, 3, 4].map((w) => (
+                <option key={w} value={w}>Tuần {w}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Công ty */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500">Công ty</label>
+            <select name="company" defaultValue={filterCompany} className="mm-input w-auto min-w-36">
+              <option value="">Tất cả</option>
+              {(user.isAdmin ? companiesInProject : userCompanyDocs).map((c) => (
+                <option key={c._id.toString()} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Nhóm vật tư */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500">Nhóm vật tư</label>
+            <select name="ma_nhom" defaultValue={filterMaNhom} className="mm-input w-auto min-w-36">
+              <option value="">Tất cả</option>
+              {distinctMaNhom.sort().map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Hãng sản xuất */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500">Hãng sản xuất</label>
+            <select name="hang_sx" defaultValue={filterHangSx} className="mm-input w-auto min-w-36">
+              <option value="">Tất cả</option>
+              {distinctHangSx.sort().map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Trục X */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-zinc-500">Trục X biểu đồ</label>
+            <select name="period_mode" defaultValue={periodMode} className="mm-input w-auto min-w-28">
+              <option value="month">Theo tháng</option>
+              <option value="week">Theo tuần</option>
+            </select>
+          </div>
+
+          <button type="submit" className="mm-btn-primary shrink-0">
+            Áp dụng
+          </button>
+        </form>
+
+        {/* Charts */}
+        <DashboardCharts
+          usageByPeriod={usageByPeriod}
+          topSupplies={topSupplies}
+          topCompanies={topCompanies}
+          usagePercent={usagePercent}
+          periodMode={periodMode}
+        />
+      </section> : null}
 
       {/* Company info editor for regular users (one form per assigned company) */}
       {!user.isAdmin && userCompanyDocs.length > 0 ? (

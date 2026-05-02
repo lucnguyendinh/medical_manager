@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Search, ChevronLeft, ChevronRight, Upload, Stethoscope, CheckCircle2, XCircle } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Upload, Stethoscope, CheckCircle2, XCircle, FileSpreadsheet } from "lucide-react";
 
 import { canManageMedicalRecord, requireAdmin, requireUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
@@ -514,30 +514,6 @@ export default async function ProjectMedicalPage({
         </div>
       ) : null}
 
-      {/* CSV import for medical (admin only) */}
-      {user.isAdmin ? (
-        <section className="mm-card p-5">
-          <div className="mb-4">
-            <h2 className="mm-section-title flex items-center gap-2">
-              <Upload size={16} className="text-sky-600" />
-              Nhập vật tư y tế từ CSV
-            </h2>
-            <p className="mm-section-desc mt-1">
-              Cột bắt buộc: <strong>company, ma_vtyt_bv, ten_vtyt_bv, ma_hieu</strong>. Cột tùy chọn: project, ma_nhom, quy_cach, don_vi_tinh, hang_sx, nuoc_sx, don_gia, dinh_muc, so_luong.
-            </p>
-          </div>
-          <div className="max-w-sm">
-            <CsvImportCard
-              icon={<Stethoscope size={16} />}
-              title="Nhập danh sách vật tư y tế"
-              hint={`Nhập vật tư cho dự án: ${resolvedProjectName}`}
-              action={importMedicalCsvAction}
-              submitLabel="Nhập Medical"
-            />
-          </div>
-        </section>
-      ) : null}
-
       <section className="mm-card p-4">
         <form className="flex flex-wrap items-end gap-2 md:flex-nowrap">
           <div className="relative min-w-48 flex-1">
@@ -589,6 +565,19 @@ export default async function ProjectMedicalPage({
           </button>
         </form>
       </section>
+
+      {user.isAdmin ? (
+        <div className="flex justify-end">
+          <a
+            href={`/api/projects/${encodeURIComponent(resolvedProjectName)}/medical/export?month=${monthFilter}&week=${weekFilter}&company=${encodeURIComponent(companyFilter)}&q=${encodeURIComponent(q)}`}
+            className="mm-btn-secondary flex items-center gap-1.5 text-sm"
+            download
+          >
+            <FileSpreadsheet size={15} />
+            Xuất Excel — Tháng {monthFilter} / Tuần {weekFilter}
+          </a>
+        </div>
+      ) : null}
 
       <MedicalTable
         projectName={resolvedProjectName}
