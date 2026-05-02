@@ -72,7 +72,7 @@ export function DashboardCharts({
               <YAxis tick={{ fontSize: 11 }} width={40} />
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e4e4e7" }}
-                formatter={(v: number) => [v.toLocaleString(), "SL sử dụng"]}
+                formatter={(v) => [Number(v).toLocaleString(), "SL sử dụng"]}
               />
               <Bar dataKey="value" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={40} />
             </BarChart>
@@ -106,7 +106,7 @@ export function DashboardCharts({
               />
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e4e4e7" }}
-                formatter={(v: number) => [v.toLocaleString(), "SL sử dụng"]}
+                formatter={(v) => [Number(v).toLocaleString(), "SL sử dụng"]}
               />
               <Bar dataKey="value" fill="#14b8a6" radius={[0, 4, 4, 0]} maxBarSize={20} />
             </BarChart>
@@ -139,7 +139,7 @@ export function DashboardCharts({
               />
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e4e4e7" }}
-                formatter={(v: number) => [v.toLocaleString(), "SL sử dụng"]}
+                formatter={(v) => [Number(v).toLocaleString(), "SL sử dụng"]}
               />
               <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} maxBarSize={20} />
             </BarChart>
@@ -168,7 +168,7 @@ export function DashboardCharts({
                 innerRadius={32}
                 paddingAngle={2}
                 label={({ percent }) =>
-                  percent > 0.04 ? `${(percent * 100).toFixed(1)}%` : ""
+                  (percent ?? 0) > 0.04 ? `${((percent ?? 0) * 100).toFixed(1)}%` : ""
                 }
                 labelLine={false}
               >
@@ -178,7 +178,7 @@ export function DashboardCharts({
               </Pie>
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e4e4e7" }}
-                formatter={(v: number, name: string) => [v.toLocaleString(), name]}
+                formatter={(v, name) => [Number(v).toLocaleString(), String(name)]}
               />
               <Legend
                 iconSize={10}
