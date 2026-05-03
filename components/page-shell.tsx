@@ -9,7 +9,7 @@ import type { CurrentUser } from "@/lib/authz";
 type PageShellProps = {
   user: CurrentUser;
   title: string;
-  description: string;
+  description?: string;
   children: ReactNode;
   action?: ReactNode;
 };
@@ -38,8 +38,8 @@ export function PageShell({ user, title, description, children, action }: PageSh
               <div className="flex items-start gap-3">
                 <span className="mt-1 hidden h-7 w-[3px] shrink-0 rounded-full bg-[oklch(0.40_0.19_258)] sm:block" />
                 <div>
-                  <h1 className="text-[1.125rem] font-bold tracking-tight text-zinc-900 md:text-xl">{title}</h1>
-                  <p className="mt-0.5 text-xs font-normal text-zinc-400">{description}</p>
+                  <h1 className="text-[3rem] font-bold tracking-tight text-zinc-900 md:text-3xl">{title}</h1>
+                  {description && <p className="mt-0.5 text-xs font-normal text-zinc-400">{description}</p>}
                 </div>
               </div>
               {action ? <div className="shrink-0">{action}</div> : null}

@@ -5,6 +5,7 @@ import { Plus, Pencil, Info, AlertTriangle, Calendar } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SubmitButton } from "@/components/submit-button";
 
 type CompanyOption = {
@@ -237,20 +238,18 @@ function MedicalForm({
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           <FormField label={FIELD_LABELS.company} required>
-            <select
+            <SearchableSelect
               name="company"
               defaultValue={defaultRow?.company ?? ""}
               required
               disabled={isLimitedEdit}
+              placeholder="— Chọn công ty —"
               className="mm-input"
-            >
-              <option value="">— Chọn công ty —</option>
-              {companies.map((company) => (
-                <option key={company.id} value={company.name}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "— Chọn công ty —" },
+                ...companies.map((company) => ({ value: company.name })),
+              ]}
+            />
           </FormField>
           <FormField label={FIELD_LABELS.so_luong}>
             <input
@@ -345,7 +344,6 @@ export function MedicalTable({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 px-5 py-4">
           <div>
             <h2 className="mm-section-title">Danh sách vật tư y tế</h2>
-            <p className="mm-section-desc">Quản lý hồ sơ vật tư và theo dõi sử dụng theo kỳ.</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1.5 rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600">

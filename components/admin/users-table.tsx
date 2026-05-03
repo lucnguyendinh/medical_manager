@@ -1,9 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Plus,
-  Upload,
   Users,
   Pencil,
   ShieldCheck,
@@ -12,12 +12,16 @@ import {
   XCircle,
   Lock,
   X,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { FormField } from "@/components/ui/form-field";
 import { CsvImportCard } from "@/components/ui/csv-import-card";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CreateUserForm } from "@/components/admin/create-user-form";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -40,8 +44,32 @@ type UserRow = {
   isProtected: boolean;
 };
 
+export type UserListQueryState = {
+  q: string;
+  role: "" | "admin" | "user";
+  status: "" | "active" | "inactive";
+  page: number;
+  totalPages: number;
+  totalCount: number;
+};
+
+function buildUserListHref(
+  basePath: string,
+  params: { q: string; role: string; status: string; page: number },
+) {
+  const sp = new URLSearchParams();
+  if (params.q.trim()) sp.set("q", params.q.trim());
+  if (params.role) sp.set("role", params.role);
+  if (params.status) sp.set("status", params.status);
+  if (params.page > 1) sp.set("page", String(params.page));
+  const qs = sp.toString();
+  return qs ? `${basePath}?${qs}` : basePath;
+}
+
 type UsersTableProps = {
   users: UserRow[];
+  userListQuery: UserListQueryState;
+  basePath?: string;
   projects: string[];
   projectCompanies: ProjectCompanyOption[];
   currentAdminId: string;
@@ -54,6 +82,8 @@ type UsersTableProps = {
 
 export function UsersTable({
   users,
+  userListQuery,
+  basePath = "/admin/users",
   projects,
   projectCompanies,
   currentAdminId,
@@ -111,34 +141,20 @@ export function UsersTable({
   return (
     <>
       {/* CSV Import section */}
-      <section className="mm-card p-5">
-        <div className="mb-4">
-          <h2 className="mm-section-title flex items-center gap-2">
-            <Upload size={16} className="text-sky-600" />
-            Nhập dữ liệu CSV
-          </h2>
-          <p className="mm-section-desc mt-1">
-            Chế độ nghiêm ngặt: nếu phát hiện bất kỳ dòng trùng lặp hoặc không hợp lệ, toàn bộ
-            lần nhập sẽ bị hủy.
-          </p>
-        </div>
         <div className="grid gap-4 sm:grid-cols-1 md:max-w-sm">
           <CsvImportCard
             icon={<Users size={16} />}
             title="Nhập người dùng"
-            hint="Cột bắt buộc: gmail, password, isadmin, project, company"
             action={importUsersCsvAction}
             submitLabel="Nhập Users"
           />
         </div>
-      </section>
 
       {/* Users table */}
       <section className="mm-card overflow-hidden">
         <div className="flex items-center justify-between gap-2 border-b border-zinc-100 px-5 py-4">
           <div>
             <h2 className="mm-section-title">Người dùng</h2>
-            <p className="mm-section-desc">{users.length} tài khoản trong hệ thống.</p>
           </div>
           <button
             type="button"
@@ -149,6 +165,71 @@ export function UsersTable({
             Tạo người dùng
           </button>
         </div>
+        <form
+          method="get"
+          action={basePath}
+          className="flex flex-wrap items-end gap-2 border-b border-zinc-100 bg-zinc-50/80 px-5 py-3"
+        >
+          <div className="min-w-[180px] flex-1">
+            <label htmlFor="admin-users-q" className="mb-1 block text-xs font-medium text-zinc-600">
+              Tìm Gmail
+            </label>
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
+                size={14}
+              />
+              <input
+                id="admin-users-q"
+                name="q"
+                type="search"
+                defaultValue={userListQuery.q}
+                placeholder="vd: name@gmail.com"
+                className="mm-input w-full pl-8"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <div className="w-full min-w-[140px] sm:w-44">
+            <span className="mb-1 block text-xs font-medium text-zinc-600">Vai trò</span>
+            <SearchableSelect
+              name="role"
+              defaultValue={userListQuery.role}
+              placeholder="Tất cả"
+              className="mm-input"
+              searchPlaceholder="Tìm..."
+              options={[
+                { value: "", label: "Tất cả vai trò" },
+                { value: "admin", label: "Admin" },
+                { value: "user", label: "User" },
+              ]}
+            />
+          </div>
+          <div className="w-full min-w-[140px] sm:w-44">
+            <span className="mb-1 block text-xs font-medium text-zinc-600">Trạng thái</span>
+            <SearchableSelect
+              name="status"
+              defaultValue={userListQuery.status}
+              placeholder="Tất cả"
+              className="mm-input"
+              searchPlaceholder="Tìm..."
+              options={[
+                { value: "", label: "Tất cả trạng thái" },
+                { value: "active", label: "Hoạt động" },
+                { value: "inactive", label: "Tắt" },
+              ]}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2 pb-0.5">
+            <button type="submit" className="mm-btn-primary mm-btn-sm flex items-center gap-1.5">
+              <Search size={13} />
+              Lọc
+            </button>
+            <Link href={basePath} className="mm-btn-ghost mm-btn-sm inline-flex items-center justify-center">
+              Đặt lại
+            </Link>
+          </div>
+        </form>
         <div className="overflow-x-auto">
           <table className="mm-table">
             <thead>
@@ -161,6 +242,13 @@ export function UsersTable({
               </tr>
             </thead>
             <tbody>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-sm text-zinc-500">
+                    Không có người dùng phù hợp bộ lọc.
+                  </td>
+                </tr>
+              ) : null}
               {users.map((user) => (
                 <tr key={user.id} className="align-middle">
                   <td>
@@ -259,6 +347,50 @@ export function UsersTable({
         </div>
       </section>
 
+      <section className="mm-card px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-xs text-zinc-400">
+            Trang{" "}
+            <span className="font-semibold text-zinc-700">{userListQuery.page}</span>
+            {" "}/{" "}
+            <span className="font-semibold text-zinc-700">{userListQuery.totalPages}</span>
+            {" — "}
+            <span className="font-semibold text-zinc-700">{userListQuery.totalCount}</span>
+            {" "}bản ghi
+          </span>
+          <div className="flex items-center gap-1">
+            <Link
+              className={`mm-btn-secondary mm-btn-sm inline-flex items-center gap-1 ${
+                userListQuery.page <= 1 ? "pointer-events-none opacity-40" : ""
+              }`}
+              href={buildUserListHref(basePath, {
+                q: userListQuery.q,
+                role: userListQuery.role,
+                status: userListQuery.status,
+                page: Math.max(1, userListQuery.page - 1),
+              })}
+            >
+              <ChevronLeft size={13} />
+              Trước
+            </Link>
+            <Link
+              className={`mm-btn-secondary mm-btn-sm inline-flex items-center gap-1 ${
+                userListQuery.page >= userListQuery.totalPages ? "pointer-events-none opacity-40" : ""
+              }`}
+              href={buildUserListHref(basePath, {
+                q: userListQuery.q,
+                role: userListQuery.role,
+                status: userListQuery.status,
+                page: Math.min(userListQuery.totalPages, userListQuery.page + 1),
+              })}
+            >
+              Sau
+              <ChevronRight size={13} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Available projects (admin overview) */}
       <section className="mm-card p-5">
         <h2 className="mm-section-title mb-3">Danh sách dự án hiện có</h2>
@@ -338,33 +470,29 @@ export function UsersTable({
                       className="flex items-end gap-2 rounded-lg border border-zinc-200 p-3"
                     >
                       <FormField label="Dự án" className="flex-1">
-                        <select
+                        <SearchableSelect
                           value={a.project}
-                          onChange={(e) => updateAssignment(i, "project", e.target.value)}
+                          onValueChange={(nextValue) => updateAssignment(i, "project", nextValue)}
+                          placeholder="— Chọn dự án —"
                           className="mm-input"
-                        >
-                          <option value="">— Chọn dự án —</option>
-                          {projects.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
+                          options={[
+                            { value: "", label: "— Chọn dự án —" },
+                            ...projects.map((project) => ({ value: project })),
+                          ]}
+                        />
                       </FormField>
                       <FormField label="Công ty" className="flex-1">
-                        <select
+                        <SearchableSelect
                           value={a.company}
                           disabled={!a.project}
-                          onChange={(e) => updateAssignment(i, "company", e.target.value)}
+                          onValueChange={(nextValue) => updateAssignment(i, "company", nextValue)}
+                          placeholder="— Chọn công ty —"
                           className="mm-input disabled:bg-zinc-50 disabled:text-zinc-400"
-                        >
-                          <option value="">— Chọn công ty —</option>
-                          {availableCompanies.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
+                          options={[
+                            { value: "", label: "— Chọn công ty —" },
+                            ...availableCompanies.map((company) => ({ value: company })),
+                          ]}
+                        />
                       </FormField>
                       <button
                         type="button"

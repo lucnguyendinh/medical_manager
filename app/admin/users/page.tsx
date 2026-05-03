@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import type { PipelineStage } from "mongoose";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -10,6 +11,8 @@ import { Project } from "@/models/Project";
 import { ProjectCompany } from "@/models/ProjectCompany";
 import { UsersTable } from "@/components/admin/users-table";
 import { PageShell } from "@/components/page-shell";
+
+const USERS_PAGE_SIZE = 10;
 
 const SUPER_ADMIN_GMAIL = process.env.SUPER_ADMIN_GMAIL?.trim().toLowerCase() ?? "";
 
@@ -34,14 +37,69 @@ function parseAssignments(formData: FormData) {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ importStatus?: string; importMessage?: string }>;
+  searchParams: Promise<{
+    importStatus?: string;
+    importMessage?: string;
+    q?: string;
+    role?: string;
+    status?: string;
+    page?: string;
+  }>;
 }) {
   const admin = await requireAdmin();
   const query = await searchParams;
 
   await connectToDatabase();
+
+  const listQ = (query.q ?? "").trim();
+  const listRole = query.role === "admin" || query.role === "user" ? query.role : "";
+  const listStatus =
+    query.status === "active" || query.status === "inactive" ? query.status : "";
+  const listPageRaw = Math.max(1, Number(query.page ?? "1") || 1);
+
+  const userMatch: Record<string, unknown> = {};
+  if (listQ) {
+    const escaped = listQ.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    userMatch.gmail = new RegExp(escaped, "i");
+  }
+  if (listRole === "admin") {
+    userMatch.isAdmin = true;
+  } else if (listRole === "user") {
+    userMatch.isAdmin = false;
+  }
+  if (listStatus === "active") {
+    userMatch.is_active = true;
+  } else if (listStatus === "inactive") {
+    userMatch.is_active = false;
+  }
+
+  const usersTotalCount = await User.countDocuments(userMatch);
+  const usersTotalPages = Math.max(1, Math.ceil(usersTotalCount / USERS_PAGE_SIZE));
+  const usersPage = Math.min(listPageRaw, usersTotalPages);
+  const usersSkip = (usersPage - 1) * USERS_PAGE_SIZE;
+
+  const userListPipeline: PipelineStage[] = [{ $match: userMatch as Record<string, unknown> }];
+  if (SUPER_ADMIN_GMAIL) {
+    userListPipeline.push({
+      $addFields: {
+        __sortSuper: {
+          $cond: [{ $eq: [{ $toLower: "$gmail" }, SUPER_ADMIN_GMAIL] }, 0, 1],
+        },
+      },
+    });
+    userListPipeline.push({
+      $sort: { __sortSuper: 1, isAdmin: -1, createdAt: -1 },
+    });
+  } else {
+    userListPipeline.push({ $sort: { isAdmin: -1, createdAt: -1 } });
+  }
+  userListPipeline.push({ $skip: usersSkip }, { $limit: USERS_PAGE_SIZE });
+  if (SUPER_ADMIN_GMAIL) {
+    userListPipeline.push({ $project: { __sortSuper: 0 } });
+  }
+
   const [users, projectCompanies, projects] = await Promise.all([
-    User.find().sort({ createdAt: -1 }).lean(),
+    User.aggregate(userListPipeline),
     ProjectCompany.find().sort({ name: 1 }).lean(),
     Project.find().sort({ name: 1 }).lean(),
   ]);
@@ -233,8 +291,8 @@ export default async function AdminUsersPage({
   return (
     <PageShell
       user={admin}
-      title="User Management"
-      description="Admin can create users and control company/project assignment."
+      title="Quản trị tài khoản"
+      description=""
     >
       {query.importMessage ? (
         <section
@@ -251,14 +309,24 @@ export default async function AdminUsersPage({
         users={users.map((user) => ({
           id: user._id.toString(),
           gmail: user.gmail,
-          assignments: (user.assignments ?? []).map((a) => ({
-            project: a.project,
-            company: a.company,
-          })),
+          assignments: (user.assignments ?? []).map(
+            (a: { project: string; company: string }) => ({
+              project: a.project,
+              company: a.company,
+            }),
+          ),
           isAdmin: user.isAdmin,
           isActive: user.is_active,
           isProtected: isProtectedSuperAdmin(user.gmail),
         }))}
+        userListQuery={{
+          q: listQ,
+          role: listRole,
+          status: listStatus,
+          page: usersPage,
+          totalPages: usersTotalPages,
+          totalCount: usersTotalCount,
+        }}
         projects={projectNames}
         projectCompanies={projectCompanies.map((item) => ({
           project: item.project,

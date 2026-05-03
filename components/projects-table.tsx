@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Plus, LayoutDashboard, Stethoscope, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, LayoutDashboard, Stethoscope, Settings, Pencil, Eye, EyeOff } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { FormField } from "@/components/ui/form-field";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SubmitButton } from "@/components/submit-button";
 
 type ProjectStatus = "VISIBLE" | "HIDDEN";
@@ -61,9 +62,6 @@ export function ProjectsTable({
         <div className="flex items-center justify-between gap-2 border-b border-zinc-100 px-5 py-4">
           <div>
             <h2 className="mm-section-title">Danh sách dự án</h2>
-            <p className="mm-section-desc">
-              {isAdmin ? "Quản lý tất cả dự án và công ty liên quan." : "Các dự án được gán cho tài khoản của bạn."}
-            </p>
           </div>
           {isAdmin ? (
             <button
@@ -118,6 +116,13 @@ export function ProjectsTable({
                         <Stethoscope size={12} />
                         Vật tư
                       </Link>
+                      <Link
+                        className="mm-btn-ghost mm-btn-sm flex items-center gap-1"
+                        href={`/projects/${encodeURIComponent(project.name)}/settings`}
+                      >
+                        <Settings size={12} />
+                        Settings
+                      </Link>
                       {isAdmin ? (
                         <>
                           <button
@@ -161,13 +166,15 @@ export function ProjectsTable({
                 />
               </FormField>
               <FormField label="Trạng thái">
-                <select name="status" defaultValue="VISIBLE" className="mm-input">
-                  {projectStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status === "VISIBLE" ? "Hiển thị" : "Ẩn"}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  name="status"
+                  defaultValue="VISIBLE"
+                  className="mm-input"
+                  options={projectStatuses.map((status) => ({
+                    value: status,
+                    label: status === "VISIBLE" ? "Hiển thị" : "Ẩn",
+                  }))}
+                />
               </FormField>
             </div>
             <FormField label="Mô tả">
@@ -194,17 +201,15 @@ export function ProjectsTable({
                 <input value={editingProject.name} disabled className="mm-input-readonly" />
               </FormField>
               <FormField label="Trạng thái">
-                <select
+                <SearchableSelect
                   name="status"
                   defaultValue={editingProject.status}
                   className="mm-input"
-                >
-                  {projectStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status === "VISIBLE" ? "Hiển thị" : "Ẩn"}
-                    </option>
-                  ))}
-                </select>
+                  options={projectStatuses.map((status) => ({
+                    value: status,
+                    label: status === "VISIBLE" ? "Hiển thị" : "Ẩn",
+                  }))}
+                />
               </FormField>
             </div>
             <FormField label="Mô tả">

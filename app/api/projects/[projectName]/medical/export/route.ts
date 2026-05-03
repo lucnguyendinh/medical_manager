@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 
-import { requireAdmin } from "@/lib/authz";
+import { getCurrentUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
+import { buildMedicalListMatch } from "@/lib/medical-list-match";
 import { Medical } from "@/models/Medical";
 import { Project } from "@/models/Project";
+
+/** Full export must not be statically cached (must reflect DB and match list filters). */
+export const dynamic = "force-dynamic";
 
 /* ── Colour palette ── */
 const CLR = {
@@ -33,10 +37,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ projectName: string }> },
 ) {
-  // Admin only
-  try {
-    await requireAdmin();
-  } catch {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -56,19 +58,22 @@ export async function GET(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  const matchQuery: Record<string, unknown> = {
-    project: decodedProjectName,
-    is_delete: false,
-  };
-  if (companyFilter) matchQuery.company = companyFilter;
-  if (q) {
-    matchQuery.$or = [
-      { ma_vtyt_bv: { $regex: q, $options: "i" } },
-      { ten_vtyt_bv: { $regex: q, $options: "i" } },
-      { ma_hieu: { $regex: q, $options: "i" } },
-    ];
+  const userCompanies = userCompaniesInProject(user, decodedProjectName);
+  if (!user.isAdmin && userCompanies.length === 0) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (!user.isAdmin && companyFilter && !userCompanies.includes(companyFilter)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const matchQuery = buildMedicalListMatch({
+    projectName: decodedProjectName,
+    user,
+    q,
+    companyFilter,
+  });
+
+  // No skip/limit: export every row that matches the same filters as the list UI (all pages).
   const rows = await Medical.find(matchQuery).sort({ company: 1, ma_nhom: 1, ten_vtyt_bv: 1 }).lean();
 
   // Resolve period value for each row

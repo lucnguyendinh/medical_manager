@@ -5,7 +5,7 @@ import { SubmitButton } from "@/components/submit-button";
 type CsvImportCardProps = {
   icon: ReactNode;
   title: string;
-  hint: string;
+  hint?: string;
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
   pendingLabel?: string;
@@ -30,7 +30,7 @@ export function CsvImportCard({
         </div>
         <div>
           <p className="text-sm font-semibold text-zinc-900">{title}</p>
-          <p className="text-xs text-zinc-500">{hint}</p>
+          {hint && <p className="text-xs text-zinc-500">{hint}</p>}
         </div>
       </div>
       <input

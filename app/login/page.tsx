@@ -1,6 +1,8 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { HeartPulse, Mail, Lock, AlertCircle } from "lucide-react";
+import { Mail, Lock, AlertCircle } from "lucide-react";
+import LogoC10 from "@/assets/LogoC10.png";
+import Image from "next/image";
 
 import { signIn } from "@/auth";
 import { getCurrentUser } from "@/lib/authz";
@@ -52,19 +54,24 @@ export default async function LoginPage({
         <div className="mm-card overflow-hidden">
           {/* Header stripe */}
           <div className="bg-gradient-to-r from-sky-600 to-sky-500 px-6 py-6 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-              <HeartPulse size={24} className="text-white" strokeWidth={2} />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl">
+              <Image
+                src={LogoC10}
+                alt="Medical Management logo"
+                width={48}
+                height={48}
+                quality={100}
+                priority
+                sizes="48px"
+                className="h-12 w-12 object-contain"
+              />
             </div>
-            <h1 className="text-xl font-bold text-white">Medical Management</h1>
-            <p className="mt-1 text-sm text-sky-100">Hệ thống quản lý vật tư y tế</p>
+            <h1 className="text-xl font-bold text-white">Khoa Trang bị</h1>
+            <p className="mt-1 text-sm text-sky-100">Bệnh viện Trung Ương Quân Đội 108</p>
           </div>
 
           {/* Form body */}
           <form action={loginAction} className="space-y-4 p-6">
-            <p className="text-center text-xs text-zinc-500">
-              Chỉ tài khoản được tạo bởi admin mới có thể đăng nhập.
-            </p>
-
             {authError ? (
               <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700">
                 <AlertCircle size={15} className="flex-shrink-0" />
@@ -117,7 +124,7 @@ export default async function LoginPage({
         </div>
 
         <p className="mt-4 text-center text-xs text-zinc-400">
-          © {new Date().getFullYear()} Medical Management System
+          © {new Date().getFullYear()} BAN KHVT - KHOA TRANG BI - BỆNH VIỆN TRUNG ƯƠNG QUÂN ĐỘI 108
         </p>
       </div>
     </main>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 
 import { FormField } from "@/components/ui/form-field";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SubmitButton } from "@/components/submit-button";
 
 type Assignment = {
@@ -119,33 +120,29 @@ export function CreateUserForm({ action, projects, projectCompanies }: CreateUse
                 className="flex items-end gap-2 rounded-lg border border-zinc-200 p-3"
               >
                 <FormField label="Dự án" className="flex-1">
-                  <select
+                  <SearchableSelect
                     value={a.project}
-                    onChange={(e) => updateAssignment(i, "project", e.target.value)}
+                    onValueChange={(nextValue) => updateAssignment(i, "project", nextValue)}
+                    placeholder="— Chọn dự án —"
                     className="mm-input"
-                  >
-                    <option value="">— Chọn dự án —</option>
-                    {projects.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "— Chọn dự án —" },
+                      ...projects.map((project) => ({ value: project })),
+                    ]}
+                  />
                 </FormField>
                 <FormField label="Công ty" className="flex-1">
-                  <select
+                  <SearchableSelect
                     value={a.company}
                     disabled={!a.project}
-                    onChange={(e) => updateAssignment(i, "company", e.target.value)}
+                    onValueChange={(nextValue) => updateAssignment(i, "company", nextValue)}
+                    placeholder="— Chọn công ty —"
                     className="mm-input disabled:bg-zinc-50 disabled:text-zinc-400"
-                  >
-                    <option value="">— Chọn công ty —</option>
-                    {availableCompanies.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "— Chọn công ty —" },
+                      ...availableCompanies.map((company) => ({ value: company })),
+                    ]}
+                  />
                 </FormField>
                 {assignments.length > 1 ? (
                   <button

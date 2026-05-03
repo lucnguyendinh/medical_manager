@@ -57,7 +57,7 @@ export function DashboardCharts({
       {/* Chart 1 — Usage over time */}
       <div className="mm-card p-5">
         <h3 className="mb-4 text-sm font-semibold text-zinc-700">
-          Biểu đồ sử dụng theo thời gian
+          Biểu đồ sử dụng tổng VTYTTH theo thời gian
           <span className="ml-2 text-xs font-normal text-zinc-400">
             (Trục X: {periodMode === "month" ? "Tháng" : "Tuần"} — Trục Y: SL sử dụng)
           </span>
@@ -114,10 +114,11 @@ export function DashboardCharts({
         )}
       </div>
 
-      {/* Chart 3 — Top companies */}
+      {/* Chart 3 — Supplies close to bid exhaustion */}
       <div className="mm-card p-5">
         <h3 className="mb-4 text-sm font-semibold text-zinc-700">
-          Top công ty sử dụng nhiều
+          Top VTYTTH sử dụng gần hết thầu
+          <span className="ml-2 text-xs font-normal text-zinc-400">(Top 10 có % còn lại thấp nhất)</span>
         </h3>
         {topCompanies.length === 0 ? (
           <EmptyState label="Không có dữ liệu." />
@@ -129,7 +130,7 @@ export function DashboardCharts({
               margin={{ top: 4, right: 16, left: 4, bottom: 4 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
               <YAxis
                 type="category"
                 dataKey="name"
@@ -139,7 +140,7 @@ export function DashboardCharts({
               />
               <Tooltip
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e4e4e7" }}
-                formatter={(v) => [Number(v).toLocaleString(), "SL sử dụng"]}
+                formatter={(v) => [`${Number(v).toFixed(2)}%`, "% còn lại"]}
               />
               <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} maxBarSize={20} />
             </BarChart>

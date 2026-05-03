@@ -1,16 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Search, ChevronLeft, ChevronRight, Upload, Stethoscope, CheckCircle2, XCircle, FileSpreadsheet } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, CheckCircle2, XCircle, FileSpreadsheet } from "lucide-react";
 
 import { canManageMedicalRecord, requireAdmin, requireUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
+import { buildMedicalListMatch } from "@/lib/medical-list-match";
 import { ensureRequiredHeaders, parseCsvFile } from "@/lib/csv-import";
 import { Medical } from "@/models/Medical";
 import { Project } from "@/models/Project";
 import { ProjectCompany } from "@/models/ProjectCompany";
 import { MedicalTable } from "@/components/medical-table";
-import { CsvImportCard } from "@/components/ui/csv-import-card";
 import { PageShell } from "@/components/page-shell";
+import { ProjectTabs } from "@/components/project-tabs";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const PAGE_SIZE = 10;
 
@@ -111,26 +113,12 @@ export default async function ProjectMedicalPage({
         .sort({ name: 1 })
         .lean();
 
-  const matchQuery: Record<string, unknown> = {
-    is_delete: false,
-    project: resolvedProjectName,
-  };
-
-  if (!user.isAdmin) {
-    matchQuery.company = { $in: userCompanies };
-  }
-
-  if (q) {
-    matchQuery.$or = [
-      { ma_vtyt_bv: { $regex: q, $options: "i" } },
-      { ten_vtyt_bv: { $regex: q, $options: "i" } },
-      { ma_hieu: { $regex: q, $options: "i" } },
-    ];
-  }
-
-  if (companyFilter) {
-    matchQuery.company = companyFilter;
-  }
+  const matchQuery = buildMedicalListMatch({
+    projectName: resolvedProjectName,
+    user,
+    q,
+    companyFilter,
+  });
 
   const [totalCount, medicalRows] = await Promise.all([
     Medical.countDocuments(matchQuery),
@@ -458,7 +446,7 @@ export default async function ProjectMedicalPage({
     } catch (error) {
       redirect(
         `${basePath}?importStatus=error&importMessage=${encodeURIComponent(
-          error instanceof Error ? error.message : "Nhập Medical CSV thất bại.",
+          error instanceof Error ? error.message : "Nhập vật tư CSV thất bại.",
         )}`,
       );
     }
@@ -493,9 +481,23 @@ export default async function ProjectMedicalPage({
   return (
     <PageShell
       user={user}
-      title={`Vật tư Y tế — ${resolvedProjectName}`}
-      description="Quản lý hồ sơ vật tư y tế trong dự án này."
+      title={`Quản lý VTYTTH — ${resolvedProjectName}`}
+      action={
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <ProjectTabs projectName={resolvedProjectName} current="medical" />
+          <a
+            href={`/api/projects/${encodeURIComponent(resolvedProjectName)}/medical/export?month=${monthFilter}&week=${weekFilter}&company=${encodeURIComponent(companyFilter)}&q=${encodeURIComponent(q)}`}
+            className="mm-btn-secondary text-xs"
+            download
+            title="Xuất toàn bộ vật tư khớp bộ lọc hiện tại (tất cả trang, không chỉ trang đang xem)."
+          >
+            <FileSpreadsheet size={13} />
+            Xuất Excel
+          </a>
+        </div>
+      }
     >
+
       {/* Import status banner */}
       {query.importMessage ? (
         <div
@@ -525,60 +527,42 @@ export default async function ProjectMedicalPage({
               className="mm-input pl-8"
             />
           </div>
-          <select
+          <SearchableSelect
             name="company"
             defaultValue={companyFilter}
+            placeholder="Tất cả công ty"
             className="mm-input w-auto min-w-40"
-          >
-            <option value="">Tất cả công ty</option>
-            {companies.map((company) => (
-              <option key={company._id.toString()} value={company.name}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-          <select
+            options={[
+              { value: "", label: "Tất cả công ty" },
+              ...companies.map((company) => ({ value: company.name })),
+            ]}
+          />
+          <SearchableSelect
             name="month"
             defaultValue={String(monthFilter)}
+            placeholder="Chọn tháng"
             className="mm-input w-auto min-w-32"
-          >
-            {Array.from({ length: 12 }, (_, idx) => idx + 1).map((month) => (
-              <option key={month} value={month}>
-                Tháng {month}
-              </option>
-            ))}
-          </select>
-          <select
+            options={Array.from({ length: 12 }, (_, idx) => idx + 1).map((month) => ({
+              value: String(month),
+              label: `Tháng ${month}`,
+            }))}
+          />
+          <SearchableSelect
             name="week"
             defaultValue={String(weekFilter)}
+            placeholder="Chọn tuần"
             className="mm-input w-auto min-w-28"
-          >
-            {Array.from({ length: 4 }, (_, idx) => idx + 1).map((week) => (
-              <option key={week} value={week}>
-                Tuần {week}
-              </option>
-            ))}
-          </select>
+            options={Array.from({ length: 4 }, (_, idx) => idx + 1).map((week) => ({
+              value: String(week),
+              label: `Tuần ${week}`,
+            }))}
+          />
           <button type="submit" className="mm-btn-primary shrink-0">
             <Search size={13} />
             Tìm kiếm
           </button>
         </form>
       </section>
-
-      {user.isAdmin ? (
-        <div className="flex justify-end">
-          <a
-            href={`/api/projects/${encodeURIComponent(resolvedProjectName)}/medical/export?month=${monthFilter}&week=${weekFilter}&company=${encodeURIComponent(companyFilter)}&q=${encodeURIComponent(q)}`}
-            className="mm-btn-secondary text-xs"
-            download
-          >
-            <FileSpreadsheet size={13} />
-            Xuất Excel — Tháng {monthFilter} / Tuần {weekFilter}
-          </a>
-        </div>
-      ) : null}
-
       <MedicalTable
         projectName={resolvedProjectName}
         companies={companies.map((company) => ({

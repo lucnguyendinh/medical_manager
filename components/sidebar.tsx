@@ -11,9 +11,11 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import LogoC10 from "@/assets/LogoC10.png";
 
 import { cn } from "@/lib/utils";
 import type { CurrentUser } from "@/lib/authz";
+import Image from "next/image";
 
 const STORAGE_KEY = "mm-sidebar-collapsed";
 
@@ -48,7 +50,7 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
   const navItems: NavItem[] = [
     { href: "/projects", icon: LayoutGrid, label: "Dự án" },
     ...(user.isAdmin
-      ? [{ href: "/admin/users", icon: Users, label: "Người dùng" }]
+      ? [{ href: "/admin/users", icon: Users, label: "Quản trị tài khoản" }]
       : []),
   ];
 
@@ -67,12 +69,12 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
       {/* Logo / brand */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-100 px-3">
         <Link href="/projects" className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.40_0.19_258)] text-white">
-            <HeartPulse size={15} strokeWidth={2.4} />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white">
+          <Image src={LogoC10} alt="logo" width={100} height={100} />
           </span>
           {!collapsed && (
             <span className="truncate text-[0.8125rem] font-bold tracking-tight text-zinc-800">
-              Medical<span className="font-extrabold text-[oklch(0.40_0.19_258)]">Mgmt</span>
+              <span className="font-extrabold text-[oklch(0.40_0.19_258)]">Ban KHVT</span>
             </span>
           )}
         </Link>
@@ -179,7 +181,7 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
                     <HeartPulse size={15} strokeWidth={2.4} />
                   </span>
                   <span className="text-[0.8125rem] font-bold tracking-tight text-zinc-800">
-                    Medical<span className="font-extrabold text-[oklch(0.40_0.19_258)]">Mgmt</span>
+                    <span className="font-extrabold text-[oklch(0.40_0.19_258)]">Ban KHVT</span>
                   </span>
                 </Link>
                 <button

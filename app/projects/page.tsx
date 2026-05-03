@@ -62,12 +62,7 @@ export default async function ProjectsPage() {
   return (
     <PageShell
       user={user}
-      title="Projects"
-      description={
-        user.isAdmin
-          ? "Manage all projects and company metadata."
-          : "Projects assigned to your account."
-      }
+      title="Dự án"
     >
       <ProjectsTable
         projects={projects.map((project) => ({
