@@ -4,6 +4,7 @@ import { Search, ChevronLeft, ChevronRight, CheckCircle2, XCircle, FileSpreadshe
 
 import { canManageMedicalRecord, requireAdmin, requireUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
+import { defaultMedicalMonthWeek, resolveMedicalMonthFilter, resolveMedicalWeekFilter } from "@/lib/medical-period";
 import { buildMedicalListMatch } from "@/lib/medical-list-match";
 import { ensureRequiredHeaders, parseCsvFile } from "@/lib/csv-import";
 import { Medical } from "@/models/Medical";
@@ -98,8 +99,9 @@ export default async function ProjectMedicalPage({
 
   const q = (query.q ?? "").trim();
   const companyFilter = (query.company ?? "").trim();
-  const monthFilter = Math.min(12, Math.max(1, Number(query.month ?? "1") || 1));
-  const weekFilter = Math.min(4, Math.max(1, Number(query.week ?? "1") || 1));
+  const periodDefaults = defaultMedicalMonthWeek();
+  const monthFilter = resolveMedicalMonthFilter(query.month, periodDefaults.month);
+  const weekFilter = resolveMedicalWeekFilter(query.week, periodDefaults.week);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
 
   const companies = user.isAdmin
@@ -552,10 +554,12 @@ export default async function ProjectMedicalPage({
             defaultValue={String(weekFilter)}
             placeholder="Chọn tuần"
             className="mm-input w-auto min-w-28"
-            options={Array.from({ length: 4 }, (_, idx) => idx + 1).map((week) => ({
-              value: String(week),
-              label: `Tuần ${week}`,
-            }))}
+            options={[
+              { value: "1", label: "Tuần 1" },
+              { value: "2", label: "Tuần 2" },
+              { value: "3", label: "Tuần 3" },
+              { value: "4", label: "Tuần 4" },
+            ]}
           />
           <button type="submit" className="mm-btn-primary shrink-0">
             <Search size={13} />

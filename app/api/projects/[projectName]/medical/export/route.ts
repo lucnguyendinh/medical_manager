@@ -3,6 +3,7 @@ import ExcelJS from "exceljs";
 
 import { getCurrentUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
+import { defaultMedicalMonthWeek, resolveMedicalMonthFilter, resolveMedicalWeekFilter } from "@/lib/medical-period";
 import { buildMedicalListMatch } from "@/lib/medical-list-match";
 import { Medical } from "@/models/Medical";
 import { Project } from "@/models/Project";
@@ -46,8 +47,15 @@ export async function GET(
   const decodedProjectName = decodeURIComponent(projectName);
 
   const { searchParams } = request.nextUrl;
-  const month = Math.min(12, Math.max(1, Number(searchParams.get("month") ?? "1") || 1));
-  const week = Math.min(4, Math.max(1, Number(searchParams.get("week") ?? "1") || 1));
+  const periodDefaults = defaultMedicalMonthWeek();
+  const month = resolveMedicalMonthFilter(
+    searchParams.get("month") ?? undefined,
+    periodDefaults.month,
+  );
+  const week = resolveMedicalWeekFilter(
+    searchParams.get("week") ?? undefined,
+    periodDefaults.week,
+  );
   const companyFilter = (searchParams.get("company") ?? "").trim();
   const q = (searchParams.get("q") ?? "").trim();
 
