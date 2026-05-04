@@ -1,0 +1,4 @@
+gmail,password,isadmin,project,company
+admin.example@yourdomain.com,ChangeMeAfterImport!,true,,
+staff.multi-project@yourdomain.com,SamePasswordOnEveryRow123!,false,test,Example Clinic Partner JSC
+staff.multi-project@yourdomain.com,SamePasswordOnEveryRow123!,false,test,Example Medical Supply Co Ltd

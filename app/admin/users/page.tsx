@@ -206,37 +206,77 @@ export default async function AdminUsersPage({
         throw new Error("Users CSV exceeds 5000 rows limit.");
       }
 
-      const normalized = rows.map((row, index) => {
+      type ParsedRow = {
+        gmail: string;
+        password: string;
+        isAdmin: boolean;
+        assignments: { project: string; company: string }[];
+      };
+
+      const byGmail = new Map<string, typeof rows>();
+      for (const row of rows) {
         const gmail = row.gmail.trim().toLowerCase();
-        const password = row.password.trim();
-        const isAdmin = parseBoolean(row.isadmin ?? "");
-        const project = (row.project ?? "").trim();
-        const company = (row.company ?? "").trim();
-
-        if (!gmail || !password) {
-          throw new Error(`Users CSV row ${index + 2}: gmail and password are required.`);
+        if (!gmail) {
+          throw new Error("Users CSV: gmail is required on every row.");
         }
-        if (!isAdmin && (!project || !company)) {
-          throw new Error(`Users CSV row ${index + 2}: project and company are required for non-admin.`);
+        if (!byGmail.has(gmail)) {
+          byGmail.set(gmail, []);
         }
-
-        return {
-          gmail,
-          password,
-          isAdmin,
-          assignments: isAdmin ? [] : [{ project, company }],
-        };
-      });
-
-      const gmailSet = new Set<string>();
-      for (const row of normalized) {
-        if (gmailSet.has(row.gmail)) {
-          throw new Error(`Users CSV duplicate gmail in file: ${row.gmail}`);
-        }
-        gmailSet.add(row.gmail);
+        byGmail.get(gmail)!.push(row);
       }
 
-      const existingUsers = await User.find({ gmail: { $in: Array.from(gmailSet) } })
+      const normalized: ParsedRow[] = [];
+      for (const [gmail, groupRows] of byGmail) {
+        const passwords = new Set(groupRows.map((r) => r.password.trim()));
+        if (passwords.size > 1) {
+          throw new Error(`Users CSV: conflicting password values for gmail ${gmail}.`);
+        }
+        const password = [...passwords][0];
+        if (!password) {
+          throw new Error(`Users CSV: password is required for gmail ${gmail}.`);
+        }
+
+        const adminFlags = new Set(groupRows.map((r) => parseBoolean(r.isadmin ?? "")));
+        if (adminFlags.size > 1) {
+          throw new Error(`Users CSV: conflicting isadmin values for gmail ${gmail}.`);
+        }
+        const isAdmin = [...adminFlags][0];
+
+        if (isAdmin) {
+          for (const r of groupRows) {
+            const project = (r.project ?? "").trim();
+            const company = (r.company ?? "").trim();
+            if (project || company) {
+              throw new Error(
+                `Users CSV: admin user ${gmail} must leave project and company empty on all rows.`,
+              );
+            }
+          }
+          normalized.push({ gmail, password, isAdmin: true, assignments: [] });
+          continue;
+        }
+
+        const assignmentKeys = new Set<string>();
+        const assignments: { project: string; company: string }[] = [];
+        for (const r of groupRows) {
+          const project = (r.project ?? "").trim();
+          const company = (r.company ?? "").trim();
+          if (!project || !company) {
+            throw new Error(
+              `Users CSV: project and company are required for non-admin gmail ${gmail} (merge multiple rows for multiple assignments).`,
+            );
+          }
+          const key = `${project}::${company}`;
+          if (!assignmentKeys.has(key)) {
+            assignmentKeys.add(key);
+            assignments.push({ project, company });
+          }
+        }
+
+        normalized.push({ gmail, password, isAdmin: false, assignments });
+      }
+
+      const existingUsers = await User.find({ gmail: { $in: normalized.map((row) => row.gmail) } })
         .select("gmail")
         .lean();
       if (existingUsers.length > 0) {
