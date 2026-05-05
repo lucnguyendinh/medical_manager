@@ -105,7 +105,7 @@ export function SearchableSelect({
                     type="button"
                     onClick={() => updateValue(option.value)}
                     className={`block w-full px-3 py-2 text-left text-sm ${
-                      isSelected ? "bg-sky-50 text-sky-700" : "hover:bg-zinc-50"
+                      isSelected ? "bg-emerald-50 text-emerald-700" : "hover:bg-zinc-50"
                     }`}
                   >
                     {option.label ?? option.value}

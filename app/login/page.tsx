@@ -45,15 +45,15 @@ export default async function LoginPage({
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       {/* Background decoration */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-sky-100/60 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-teal-100/60 blur-3xl" />
+        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-emerald-100/60 blur-3xl" />
+        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-100/60 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm">
         {/* Card */}
         <div className="mm-card overflow-hidden">
           {/* Header stripe */}
-          <div className="bg-gradient-to-r from-sky-600 to-sky-500 px-6 py-6 text-center">
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl">
               <Image
                 src={LogoC10}
@@ -67,7 +67,7 @@ export default async function LoginPage({
               />
             </div>
             <h1 className="text-xl font-bold text-white">Khoa Trang bị</h1>
-            <p className="mt-1 text-sm text-sky-100">Bệnh viện Trung Ương Quân Đội 108</p>
+            <p className="mt-1 text-sm text-emerald-100">Bệnh viện Trung Ương Quân Đội 108</p>
           </div>
 
           {/* Form body */}

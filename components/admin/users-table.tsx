@@ -283,7 +283,7 @@ export function UsersTable({
                         {user.assignments.map((a, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700"
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700"
                           >
                             {a.project} / {a.company}
                           </span>
@@ -450,7 +450,7 @@ export function UsersTable({
                 checked={editIsAdmin}
                 onChange={(e) => setEditIsAdmin(e.target.checked)}
                 disabled={editingUser.isProtected}
-                className="h-4 w-4 cursor-pointer rounded accent-sky-600"
+                className="h-4 w-4 cursor-pointer rounded accent-emerald-600"
               />
               <div>
                 <span className="text-sm font-medium text-zinc-700">Quyền Admin</span>

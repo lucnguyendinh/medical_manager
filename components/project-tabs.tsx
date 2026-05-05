@@ -41,7 +41,7 @@ export function ProjectTabs({ projectName, current }: ProjectTabsProps) {
             href={`/projects/${encodedProjectName}/${tab.path}`}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
               isActive
-                ? "bg-sky-100 text-sky-700"
+                ? "bg-emerald-100 text-emerald-700"
                 : "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
             }`}
           >

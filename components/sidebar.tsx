@@ -74,7 +74,7 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
           </span>
           {!collapsed && (
             <span className="truncate text-[0.8125rem] font-bold tracking-tight text-zinc-800">
-              <span className="font-extrabold text-[oklch(0.40_0.19_258)]">Ban KHVT</span>
+              <span className="font-extrabold text-[oklch(0.52_0.15_152)]">Ban KHVT</span>
             </span>
           )}
         </Link>
@@ -102,20 +102,20 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
               className={cn(
                 "group relative flex items-center gap-3 rounded-lg py-2 text-[0.8125rem] font-medium transition-colors duration-100",
                 active
-                  ? "bg-indigo-50 text-[oklch(0.40_0.19_258)]"
+                  ? "bg-emerald-50 text-[oklch(0.52_0.15_152)]"
                   : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800",
                 collapsed ? "justify-center px-0" : "px-2.5",
               )}
             >
               {/* Left accent bar for active state */}
               {active && !collapsed && (
-                <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[oklch(0.40_0.19_258)]" />
+                <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[oklch(0.52_0.15_152)]" />
               )}
               <item.icon
                 size={16}
                 className={cn(
                   "shrink-0 transition-colors",
-                  active ? "text-[oklch(0.40_0.19_258)]" : "text-zinc-400 group-hover:text-zinc-600",
+                  active ? "text-[oklch(0.52_0.15_152)]" : "text-zinc-400 group-hover:text-zinc-600",
                 )}
               />
               {!collapsed && <span className="truncate">{item.label}</span>}
@@ -128,7 +128,7 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
       {!collapsed && (
         <div className="border-t border-zinc-100 px-3 py-3">
           {user.isAdmin ? (
-            <span className="mb-1.5 inline-flex rounded-md bg-indigo-50 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-indigo-600">
+            <span className="mb-1.5 inline-flex rounded-md bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-emerald-600">
               Admin
             </span>
           ) : null}
@@ -177,11 +177,11 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
                   className="flex items-center gap-2.5"
                   onClick={onMobileClose}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.40_0.19_258)] text-white">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[oklch(0.52_0.15_152)] text-white">
                     <HeartPulse size={15} strokeWidth={2.4} />
                   </span>
                   <span className="text-[0.8125rem] font-bold tracking-tight text-zinc-800">
-                    <span className="font-extrabold text-[oklch(0.40_0.19_258)]">Ban KHVT</span>
+                    <span className="font-extrabold text-[oklch(0.52_0.15_152)]">Ban KHVT</span>
                   </span>
                 </Link>
                 <button
@@ -204,18 +204,18 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
                       className={cn(
                         "group relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-[0.8125rem] font-medium transition-colors duration-100",
                         active
-                          ? "bg-indigo-50 text-[oklch(0.40_0.19_258)]"
+                          ? "bg-emerald-50 text-[oklch(0.52_0.15_152)]"
                           : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800",
                       )}
                     >
                       {active && (
-                        <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[oklch(0.40_0.19_258)]" />
+                        <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[oklch(0.52_0.15_152)]" />
                       )}
                       <item.icon
                         size={16}
                         className={cn(
                           "shrink-0",
-                          active ? "text-[oklch(0.40_0.19_258)]" : "text-zinc-400 group-hover:text-zinc-600",
+                          active ? "text-[oklch(0.52_0.15_152)]" : "text-zinc-400 group-hover:text-zinc-600",
                         )}
                       />
                       <span>{item.label}</span>
@@ -226,7 +226,7 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
 
               <div className="border-t border-zinc-100 px-3 py-3">
                 {user.isAdmin ? (
-                  <span className="mb-1.5 inline-flex rounded-md bg-indigo-50 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-indigo-600">
+                  <span className="mb-1.5 inline-flex rounded-md bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-emerald-600">
                     Admin
                   </span>
                 ) : null}

@@ -414,34 +414,6 @@ export default async function ProjectMedicalPage({
         };
       });
 
-      const keySet = new Set<string>();
-      for (const row of normalized) {
-        const key = `${row.company}::${row.ma_vtyt_bv}::${row.ten_vtyt_bv}::${row.ma_hieu}`;
-        if (keySet.has(key)) {
-          throw new Error(`Medical CSV trùng lặp trong file: ${key}`);
-        }
-        keySet.add(key);
-      }
-
-      const existing = await Medical.find({
-        project: resolvedProjectName,
-        $or: normalized.map((item) => ({
-          company: item.company,
-          ma_vtyt_bv: item.ma_vtyt_bv,
-          ten_vtyt_bv: item.ten_vtyt_bv,
-          ma_hieu: item.ma_hieu,
-          is_delete: false,
-        })),
-      })
-        .select("company ma_vtyt_bv ten_vtyt_bv ma_hieu")
-        .lean();
-      if (existing.length > 0) {
-        const dup = existing[0];
-        throw new Error(
-          `Medical CSV trùng với DB: ${dup.company}::${dup.ma_vtyt_bv}::${dup.ten_vtyt_bv}::${dup.ma_hieu}`,
-        );
-      }
-
       await Medical.insertMany(normalized, { ordered: true });
       importedCount = normalized.length;
       revalidatePath(basePath);

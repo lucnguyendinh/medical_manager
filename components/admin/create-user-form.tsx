@@ -100,7 +100,7 @@ export function CreateUserForm({ action, projects, projectCompanies }: CreateUse
           name="isAdmin"
           checked={isAdmin}
           onChange={(e) => setIsAdmin(e.target.checked)}
-          className="h-4 w-4 cursor-pointer rounded accent-sky-600"
+          className="h-4 w-4 cursor-pointer rounded accent-emerald-600"
         />
         <div>
           <span className="text-sm font-medium text-zinc-700">Quyền Admin</span>

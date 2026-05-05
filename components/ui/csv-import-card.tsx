@@ -25,7 +25,7 @@ export function CsvImportCard({
       className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4"
     >
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
           {icon}
         </div>
         <div>
@@ -38,7 +38,7 @@ export function CsvImportCard({
         type="file"
         accept=".csv,text/csv"
         required
-        className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 px-3 py-2.5 text-xs text-zinc-600 transition file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-sky-50 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-sky-700 hover:border-sky-400 hover:bg-sky-50/20"
+        className="block w-full cursor-pointer rounded-lg border border-dashed border-zinc-300 px-3 py-2.5 text-xs text-zinc-600 transition file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-emerald-50 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50/20"
       />
       <div className="flex justify-end">
         <SubmitButton

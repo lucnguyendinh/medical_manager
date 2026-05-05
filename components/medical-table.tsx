@@ -266,8 +266,8 @@ function MedicalForm({
 
       {/* Period fields */}
       {includePeriodInputs ? (
-        <fieldset className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/20 p-4">
-          <legend className="flex items-center gap-1.5 px-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-indigo-500">
+        <fieldset className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/20 p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-emerald-500">
             <Calendar size={11} />
             Dữ liệu kỳ — Tháng {selectedMonth} / Tuần {selectedWeek}
           </legend>
@@ -346,7 +346,7 @@ export function MedicalTable({
             <h2 className="mm-section-title">Danh sách vật tư y tế</h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-600">
+            <span className="flex items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
               <Calendar size={11} />
               Tháng {selectedMonth} — Tuần {selectedWeek}
             </span>
@@ -392,7 +392,7 @@ export function MedicalTable({
               {medicalRows.map((medical) => (
                 <tr key={medical.id} className="whitespace-nowrap">
                   <Cell value={medical.ma_nhom} className="text-zinc-500" />
-                  <Cell value={medical.ma_vtyt_bv} className="font-mono text-xs text-sky-700" />
+                  <Cell value={medical.ma_vtyt_bv} className="font-mono text-xs text-emerald-700" />
                   <Cell value={medical.ten_vtyt_bv} maxWidth="max-w-56" className="font-medium text-zinc-800" />
                   <Cell value={medical.don_vi_tinh} maxWidth="max-w-24" />
                   <Cell value={medical.ma_hieu} className="font-mono text-xs" />
@@ -466,7 +466,7 @@ export function MedicalTable({
           maxWidth="max-w-3xl"
         >
           <div className="mb-4 space-y-2">
-            <div className="flex items-start gap-2 rounded-lg bg-indigo-50 px-3 py-2.5 text-xs text-indigo-700">
+            <div className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-xs text-emerald-700">
               <Info size={13} className="mt-0.5 shrink-0" />
               <span>
                 Dữ liệu kỳ được lưu cho <strong>Tháng {selectedMonth} — Tuần {selectedWeek}</strong>.

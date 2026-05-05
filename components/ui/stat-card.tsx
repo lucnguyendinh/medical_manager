@@ -13,8 +13,8 @@ type StatCardProps = {
 };
 
 const accentMap: Record<StatCardAccent, { icon: string; value: string }> = {
-  blue: { icon: "bg-blue-50 text-blue-600", value: "text-blue-700" },
-  teal: { icon: "bg-teal-50 text-teal-600", value: "text-teal-700" },
+  blue: { icon: "bg-emerald-50 text-emerald-600", value: "text-emerald-700" },
+  teal: { icon: "bg-emerald-50 text-emerald-600", value: "text-emerald-700" },
   green: { icon: "bg-emerald-50 text-emerald-600", value: "text-emerald-700" },
   purple: { icon: "bg-purple-50 text-purple-600", value: "text-purple-700" },
   amber: { icon: "bg-amber-50 text-amber-600", value: "text-amber-700" },

@@ -36,7 +36,7 @@ export function PageShell({ user, title, description, children, action }: PageSh
             {/* Page header */}
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <span className="mt-1 hidden h-7 w-[3px] shrink-0 rounded-full bg-[oklch(0.40_0.19_258)] sm:block" />
+                <span className="mt-1 hidden h-7 w-[3px] shrink-0 rounded-full bg-[oklch(0.52_0.15_152)] sm:block" />
                 <div>
                   <h1 className="text-[3rem] font-bold tracking-tight text-zinc-900 md:text-3xl">{title}</h1>
                   {description && <p className="mt-0.5 text-xs font-normal text-zinc-400">{description}</p>}

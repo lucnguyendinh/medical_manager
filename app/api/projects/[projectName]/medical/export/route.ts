@@ -13,15 +13,15 @@ export const dynamic = "force-dynamic";
 
 /* ── Colour palette ── */
 const CLR = {
-  headerBg: "FF0369A1",    // sky-700
+  headerBg: "FF047857",    // emerald-700
   headerFg: "FFFFFFFF",
-  subHeaderBg: "FFE0F2FE", // sky-100
-  subHeaderFg: "FF0C4A6E", // sky-950
-  altRow: "FFF0F9FF",      // sky-50
+  subHeaderBg: "FFDCFCE7", // emerald-100
+  subHeaderFg: "FF14532D", // emerald-950
+  altRow: "FFF0FDF4",      // emerald-50
   border: "FFB0D4E8",
-  totalBg: "FFDBEAFE",     // indigo-100
-  totalFg: "FF1E1B4B",     // indigo-950
-  accent: "FF0EA5E9",      // sky-500
+  totalBg: "FFDCFCE7",     // emerald-100
+  totalFg: "FF14532D",     // emerald-950
+  accent: "FF10B981",      // emerald-500
 };
 
 function applyBorder(cell: ExcelJS.Cell, color = CLR.border) {

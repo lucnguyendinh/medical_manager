@@ -238,7 +238,7 @@ export default async function ProjectDashboardPage({
       {/* Dashboard filter + charts (admin only) */}
       {user.isAdmin ? <section className="mm-card p-5">
         <div className="mb-4 flex items-center gap-2">
-          <SlidersHorizontal size={16} className="text-sky-600" />
+          <SlidersHorizontal size={16} className="text-emerald-600" />
           <h2 className="mm-section-title">Biểu đồ thống kê</h2>
         </div>
 

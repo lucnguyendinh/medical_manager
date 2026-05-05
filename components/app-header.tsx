@@ -29,7 +29,7 @@ export function AppHeader({ user, onMenuClick }: AppHeaderProps) {
       {/* Right: user info + logout */}
       <div className="flex items-center gap-2">
         {user.isAdmin ? (
-          <span className="hidden rounded-md bg-indigo-50 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-indigo-600 sm:inline-flex">
+          <span className="hidden rounded-md bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-emerald-600 sm:inline-flex">
             Admin
           </span>
         ) : null}

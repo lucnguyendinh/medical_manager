@@ -6,14 +6,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-sky-50 text-sky-700",
+        default: "bg-emerald-50 text-emerald-700",
         success: "bg-emerald-50 text-emerald-700",
         warning: "bg-amber-50 text-amber-700",
         danger: "bg-red-50 text-red-700",
         muted: "bg-zinc-100 text-zinc-600",
         purple: "bg-purple-50 text-purple-700",
-        teal: "bg-teal-50 text-teal-700",
-        medical: "bg-blue-50 text-blue-700",
+        teal: "bg-emerald-50 text-emerald-700",
+        medical: "bg-emerald-50 text-emerald-700",
       },
     },
     defaultVariants: {
