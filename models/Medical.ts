@@ -12,6 +12,20 @@ const MedicalPeriodValueSchema = new Schema(
   { _id: false },
 );
 
+const MedicalMediaSchema = new Schema(
+  {
+    url: { type: String, required: true },
+    public_id: { type: String, required: true },
+    width: { type: Number },
+    height: { type: Number },
+    format: { type: String },
+    bytes: { type: Number },
+    uploaded_by: { type: String, default: "" },
+    uploaded_at: { type: Date },
+  },
+  { _id: false },
+);
+
 const MedicalSchema = new Schema(
   {
     ma_nhom: { type: String, default: "" },
@@ -27,6 +41,7 @@ const MedicalSchema = new Schema(
     project: { type: String, required: true },
     dinh_muc: { type: String, default: "" },
     so_luong: { type: String, default: "" },
+    media: { type: [MedicalMediaSchema], default: [] },
     period_values: { type: [MedicalPeriodValueSchema], default: [] },
     is_delete: { type: Boolean, default: false },
   },

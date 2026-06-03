@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Info, AlertTriangle, Calendar } from "lucide-react";
+import { Plus, Pencil, Info, AlertTriangle, Calendar, ImageIcon } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { MediaUploader } from "@/components/ui/media-uploader";
 import { SubmitButton } from "@/components/submit-button";
+import type { MedicalMedia } from "@/lib/medical-media";
 
 type CompanyOption = {
   id: string;
@@ -27,6 +29,7 @@ type MedicalRow = {
   company: string;
   dinh_muc: string;
   so_luong: string;
+  media: MedicalMedia[];
   so_luong_su_dung: string;
   phan_tram: string;
   tstk: string;
@@ -81,17 +84,106 @@ function Cell({
   );
 }
 
-function PercentBar({ value }: { value: string }) {
+function MediaCountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[0.65rem] font-medium text-emerald-600"
+      title={`${count} ảnh`}
+    >
+      <ImageIcon size={10} />
+      {count}
+    </span>
+  );
+}
+
+function PercentBar({ value, barWidth = "w-16" }: { value: string; barWidth?: string }) {
   const num = parseFloat(value);
   if (!value || isNaN(num)) return <span className="text-zinc-400">—</span>;
   const pct = Math.min(100, Math.max(0, num));
   const color = pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-amber-500" : "bg-emerald-500";
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-zinc-100">
+      <div className={`h-1.5 ${barWidth} overflow-hidden rounded-full bg-zinc-100`}>
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <span className="text-xs font-medium text-zinc-700">{value}%</span>
+    </div>
+  );
+}
+
+/* ── Mobile card — stacked layout shown below the `md` breakpoint ── */
+function MobileField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">{label}</dt>
+      <dd className="truncate text-sm text-zinc-700">{value || "—"}</dd>
+    </div>
+  );
+}
+
+function MedicalCard({
+  medical,
+  onEdit,
+  deleteMedicalAction,
+}: {
+  medical: MedicalRow;
+  onEdit: () => void;
+  deleteMedicalAction: (formData: FormData) => Promise<void>;
+}) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-sm font-semibold text-zinc-900">
+              {medical.ten_vtyt_bv || "—"}
+            </p>
+            <MediaCountBadge count={medical.media.length} />
+          </div>
+          <p className="mt-0.5 truncate font-mono text-xs text-emerald-700">
+            {medical.ma_vtyt_bv || "—"}
+          </p>
+        </div>
+        <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+          {medical.company || "—"}
+        </span>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+        <MobileField label={FIELD_LABELS.ma_nhom} value={medical.ma_nhom} />
+        <MobileField label={FIELD_LABELS.ma_hieu} value={medical.ma_hieu} />
+        <MobileField label={FIELD_LABELS.don_vi_tinh} value={medical.don_vi_tinh} />
+        <MobileField label={FIELD_LABELS.hang_sx} value={medical.hang_sx} />
+        <MobileField label={FIELD_LABELS.don_gia} value={medical.don_gia} />
+        <MobileField label={FIELD_LABELS.dinh_muc} value={medical.dinh_muc} />
+        <MobileField label={FIELD_LABELS.so_luong} value={medical.so_luong} />
+        <MobileField label={FIELD_LABELS.so_luong_su_dung} value={medical.so_luong_su_dung} />
+      </dl>
+
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-zinc-100 pt-3">
+        <div className="min-w-0">
+          <p className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+            {FIELD_LABELS.phan_tram}
+          </p>
+          <PercentBar value={medical.phan_tram} barWidth="w-24" />
+        </div>
+        <div className="flex shrink-0 gap-1.5">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="mm-btn-ghost mm-btn-sm flex items-center gap-1"
+            title="Chỉnh sửa"
+          >
+            <Pencil size={12} />
+            Sửa
+          </button>
+          <form action={deleteMedicalAction} className="contents">
+            <input type="hidden" name="medicalId" value={medical.id} />
+            <SubmitButton label="Xóa" pendingLabel="..." className="mm-btn-danger mm-btn-sm" />
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
@@ -191,6 +283,10 @@ function MedicalForm({
             />
           </FormField>
         </div>
+        {/* Media stays editable for all roles, unlike the identity fields above. */}
+        <FormField label="Hình ảnh" hint="Chụp ảnh hoặc tải lên (tối đa 10 ảnh).">
+          <MediaUploader defaultValue={defaultRow?.media ?? []} />
+        </FormField>
       </fieldset>
 
       {/* Quantity & pricing */}
@@ -361,8 +457,24 @@ export function MedicalTable({
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Mobile: stacked cards (below md) */}
+        <div className="space-y-3 p-4 md:hidden">
+          {medicalRows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-400">Không có bản ghi nào.</p>
+          ) : (
+            medicalRows.map((medical) => (
+              <MedicalCard
+                key={medical.id}
+                medical={medical}
+                onEdit={() => setEditingRowId(medical.id)}
+                deleteMedicalAction={deleteMedicalAction}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Desktop: full table (md and up) */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="mm-table">
             <thead>
               <tr>
@@ -393,7 +505,14 @@ export function MedicalTable({
                 <tr key={medical.id} className="whitespace-nowrap">
                   <Cell value={medical.ma_nhom} className="text-zinc-500" />
                   <Cell value={medical.ma_vtyt_bv} className="font-mono text-xs text-emerald-700" />
-                  <Cell value={medical.ten_vtyt_bv} maxWidth="max-w-56" className="font-medium text-zinc-800" />
+                  <td title={medical.ten_vtyt_bv || undefined} className="max-w-56">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate font-medium text-zinc-800">
+                        {medical.ten_vtyt_bv || "—"}
+                      </span>
+                      <MediaCountBadge count={medical.media.length} />
+                    </div>
+                  </td>
                   <Cell value={medical.don_vi_tinh} maxWidth="max-w-24" />
                   <Cell value={medical.ma_hieu} className="font-mono text-xs" />
                   <Cell value={medical.hang_sx} />

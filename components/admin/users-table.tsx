@@ -230,7 +230,109 @@ export function UsersTable({
             </Link>
           </div>
         </form>
-        <div className="overflow-x-auto">
+        {/* Mobile: stacked cards (below md) */}
+        <div className="space-y-3 p-4 md:hidden">
+          {users.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">
+              Không có người dùng phù hợp bộ lọc.
+            </p>
+          ) : (
+            users.map((user) => (
+              <div
+                key={user.id}
+                className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-900">{user.gmail}</p>
+                    {user.isProtected ? (
+                      <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-600">
+                        <Lock size={10} />
+                        Super admin được bảo vệ
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    {user.isAdmin ? (
+                      <Badge variant="medical" className="gap-1">
+                        <ShieldCheck size={11} />
+                        Admin
+                      </Badge>
+                    ) : (
+                      <Badge variant="muted" className="gap-1">
+                        <User size={11} />
+                        User
+                      </Badge>
+                    )}
+                    {user.isActive ? (
+                      <Badge variant="success" className="gap-1">
+                        <CheckCircle2 size={11} />
+                        Hoạt động
+                      </Badge>
+                    ) : (
+                      <Badge variant="muted" className="gap-1">
+                        <XCircle size={11} />
+                        Tắt
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <p className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+                    Phân quyền dự án / công ty
+                  </p>
+                  {user.isAdmin ? (
+                    <span className="text-xs text-zinc-400">Tất cả dự án</span>
+                  ) : user.assignments.length === 0 ? (
+                    <span className="text-xs text-zinc-400">—</span>
+                  ) : (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {user.assignments.map((a, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700"
+                        >
+                          {a.project} / {a.company}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap justify-end gap-1.5 border-t border-zinc-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(user)}
+                    disabled={user.isProtected}
+                    className="mm-btn-ghost mm-btn-sm flex items-center gap-1 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Pencil size={12} />
+                    Sửa
+                  </button>
+                  <form action={toggleUserActiveAction} className="contents">
+                    <input type="hidden" name="userId" value={user.id} />
+                    <input type="hidden" name="nextActive" value={user.isActive ? "false" : "true"} />
+                    <SubmitButton
+                      label={user.isActive ? "Tắt" : "Bật"}
+                      pendingLabel="..."
+                      className="mm-btn-secondary mm-btn-sm"
+                    />
+                  </form>
+                  {user.id !== currentAdminId && !user.isProtected ? (
+                    <form action={deleteUserAction} className="contents">
+                      <input type="hidden" name="userId" value={user.id} />
+                      <SubmitButton label="Xóa" pendingLabel="..." className="mm-btn-danger mm-btn-sm" />
+                    </form>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop: full table (md and up) */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="mm-table">
             <thead>
               <tr>

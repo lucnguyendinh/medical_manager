@@ -1,16 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Search, ChevronLeft, ChevronRight, CheckCircle2, XCircle, FileSpreadsheet } from "lucide-react";
+import { Search, CheckCircle2, XCircle, FileSpreadsheet } from "lucide-react";
 
 import { canManageMedicalRecord, requireAdmin, requireUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
 import { defaultMedicalMonthWeek, resolveMedicalMonthFilter, resolveMedicalWeekFilter } from "@/lib/medical-period";
 import { buildMedicalListMatch } from "@/lib/medical-list-match";
 import { ensureRequiredHeaders, parseCsvFile } from "@/lib/csv-import";
+import { cloudinary, cloudinaryConfig } from "@/lib/cloudinary";
+import { parseMediaJson } from "@/lib/medical-media";
 import { Medical } from "@/models/Medical";
 import { Project } from "@/models/Project";
 import { ProjectCompany } from "@/models/ProjectCompany";
 import { MedicalTable } from "@/components/medical-table";
+import { PaginationBar } from "@/components/pagination-bar";
 import { PageShell } from "@/components/page-shell";
 import { ProjectTabs } from "@/components/project-tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -174,6 +177,11 @@ export default async function ProjectMedicalPage({
       project: projectNameFromForm,
       dinh_muc: readFormText(formData, "dinh_muc"),
       so_luong: readFormText(formData, "so_luong"),
+      media: parseMediaJson(formData.get("media"), cloudinaryConfig.cloudName).map((m) => ({
+        ...m,
+        uploaded_by: actor.gmail,
+        uploaded_at: m.uploaded_at ? new Date(m.uploaded_at) : new Date(),
+      })),
     };
 
     await Medical.create(payload);
@@ -287,6 +295,31 @@ export default async function ProjectMedicalPage({
     } else {
       periodValues.push(periodPayload);
     }
+
+    // Media is editable by both admins and assigned company users.
+    const submittedMedia = parseMediaJson(formData.get("media"), cloudinaryConfig.cloudName);
+    const existingMedia = Array.isArray(existing.media) ? existing.media : [];
+    const submittedPublicIds = new Set(submittedMedia.map((m) => m.public_id));
+    const removedPublicIds = existingMedia
+      .map((m) => m.public_id)
+      .filter((publicId): publicId is string => Boolean(publicId) && !submittedPublicIds.has(publicId));
+
+    // Best-effort cleanup of images removed from the gallery; never block the save.
+    if (removedPublicIds.length > 0 && cloudinaryConfig.cloudName) {
+      await Promise.allSettled(
+        removedPublicIds.map((publicId) => cloudinary.uploader.destroy(publicId)),
+      );
+    }
+
+    const nextMedia = submittedMedia.map((m) => {
+      const previous = existingMedia.find((e) => e.public_id === m.public_id);
+      return {
+        ...m,
+        uploaded_by: previous?.uploaded_by || m.uploaded_by || actor.gmail,
+        uploaded_at: previous?.uploaded_at ?? (m.uploaded_at ? new Date(m.uploaded_at) : new Date()),
+      };
+    });
+
     await Medical.updateOne(
       { _id: medicalId },
       {
@@ -320,6 +353,7 @@ export default async function ProjectMedicalPage({
             ? readFormText(formData, "dinh_muc")
             : String(existing.dinh_muc ?? ""),
           so_luong: soLuong,
+          media: nextMedia,
           period_values: periodValues,
         },
       },
@@ -560,6 +594,16 @@ export default async function ProjectMedicalPage({
           company: medical.company ?? "",
           dinh_muc: medical.dinh_muc ?? "",
           so_luong: medical.so_luong ?? "",
+          media: (medical.media ?? []).map((m) => ({
+            url: m.url,
+            public_id: m.public_id,
+            width: m.width ?? undefined,
+            height: m.height ?? undefined,
+            format: m.format ?? undefined,
+            bytes: m.bytes ?? undefined,
+            uploaded_by: m.uploaded_by ?? undefined,
+            uploaded_at: m.uploaded_at ? new Date(m.uploaded_at).toISOString() : undefined,
+          })),
           so_luong_su_dung:
             getPeriodValue(medical, monthFilter, weekFilter)?.so_luong_su_dung ?? "",
           phan_tram: calculatePercent(
@@ -576,35 +620,14 @@ export default async function ProjectMedicalPage({
         selectedWeek={weekFilter}
       />
 
-      <section className="mm-card px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-xs text-zinc-400">
-            Trang{" "}
-            <span className="font-semibold text-zinc-700">{page}</span>
-            {" "}/{" "}
-            <span className="font-semibold text-zinc-700">{totalPages}</span>
-            {" — "}
-            <span className="font-semibold text-zinc-700">{totalCount}</span>
-            {" "}bản ghi
-          </span>
-          <div className="flex items-center gap-1">
-            <a
-              className={`mm-btn-secondary mm-btn-sm ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-              href={`${basePath}?q=${encodeURIComponent(q)}&company=${encodeURIComponent(companyFilter)}&month=${monthFilter}&week=${weekFilter}&page=${Math.max(1, page - 1)}`}
-            >
-              <ChevronLeft size={13} />
-              Trước
-            </a>
-            <a
-              className={`mm-btn-secondary mm-btn-sm ${page >= totalPages ? "pointer-events-none opacity-40" : ""}`}
-              href={`${basePath}?q=${encodeURIComponent(q)}&company=${encodeURIComponent(companyFilter)}&month=${monthFilter}&week=${weekFilter}&page=${Math.min(totalPages, page + 1)}`}
-            >
-              Sau
-              <ChevronRight size={13} />
-            </a>
-          </div>
-        </div>
-      </section>
+      <PaginationBar
+        page={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        buildPageHref={(pageNumber) =>
+          `${basePath}?q=${encodeURIComponent(q)}&company=${encodeURIComponent(companyFilter)}&month=${monthFilter}&week=${weekFilter}&page=${pageNumber}`
+        }
+      />
     </PageShell>
   );
 }

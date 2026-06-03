@@ -133,7 +133,79 @@ export function ProjectCompaniesTable({
           </form>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile: stacked cards (below md) */}
+        <div className="space-y-3 p-4 md:hidden">
+          {companies.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-400">
+              {totalCount === 0 ? "Chưa có công ty nào." : "Không có công ty khớp bộ lọc."}
+            </p>
+          ) : (
+            companies.map((company) => (
+              <div
+                key={company.id}
+                className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
+              >
+                <p className="truncate text-sm font-semibold text-zinc-900">
+                  {company.name || "—"}
+                </p>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+                  <div className="min-w-0">
+                    <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+                      Số điện thoại
+                    </dt>
+                    <dd className="truncate text-sm text-zinc-700">{company.phone_number || "—"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+                      Mã số thuế
+                    </dt>
+                    <dd className="truncate font-mono text-xs text-zinc-700">
+                      {company.tax_number || "—"}
+                    </dd>
+                  </div>
+                  <div className="col-span-2 min-w-0">
+                    <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+                      Địa chỉ
+                    </dt>
+                    <dd className="text-sm text-zinc-700">{company.address || "—"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+                      STK
+                    </dt>
+                    <dd className="truncate font-mono text-xs text-zinc-700">
+                      {company.bank_account_number || "—"}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-zinc-400">
+                      Ngân hàng
+                    </dt>
+                    <dd className="truncate text-sm text-zinc-700">{company.bank_name || "—"}</dd>
+                  </div>
+                </dl>
+                <div className="mt-3 flex justify-end gap-1.5 border-t border-zinc-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(company.id)}
+                    className="mm-btn-ghost mm-btn-sm flex items-center gap-1"
+                    title="Chỉnh sửa"
+                  >
+                    <Pencil size={12} />
+                    Sửa
+                  </button>
+                  <form action={deleteCompanyAction} className="contents">
+                    <input type="hidden" name="companyId" value={company.id} />
+                    <SubmitButton label="Xóa" pendingLabel="..." className="mm-btn-danger mm-btn-sm" />
+                  </form>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop: full table (md and up) */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="mm-table">
             <thead>
               <tr>
