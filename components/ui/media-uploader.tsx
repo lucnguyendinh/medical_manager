@@ -126,7 +126,7 @@ export function MediaUploader({ name = "media", defaultValue = [] }: MediaUpload
               <button
                 type="button"
                 onClick={() => removeItem(media.public_id)}
-                className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-zinc-900/60 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
+                className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-zinc-900/60 text-white opacity-100 transition hover:bg-red-600 md:opacity-0 md:group-hover:opacity-100"
                 aria-label="Xóa ảnh"
                 title="Xóa ảnh"
               >

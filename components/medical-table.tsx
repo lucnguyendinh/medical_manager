@@ -478,9 +478,9 @@ export function MedicalTable({
           <table className="mm-table">
             <thead>
               <tr>
-                <th>{FIELD_LABELS.ma_nhom}</th>
-                <th>{FIELD_LABELS.ma_vtyt_bv}</th>
-                <th>{FIELD_LABELS.ten_vtyt_bv}</th>
+                <th className="sticky left-0 z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_nhom}</th>
+                <th className="sticky left-40 z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_vtyt_bv}</th>
+                <th className="sticky left-80 z-20 w-56 min-w-56 max-w-56 bg-zinc-50 shadow-[1px_0_0_0_#e4e4e7]">{FIELD_LABELS.ten_vtyt_bv}</th>
                 <th>{FIELD_LABELS.don_vi_tinh}</th>
                 <th>{FIELD_LABELS.ma_hieu}</th>
                 <th>{FIELD_LABELS.hang_sx}</th>
@@ -502,10 +502,21 @@ export function MedicalTable({
                 </tr>
               ) : null}
               {medicalRows.map((medical) => (
-                <tr key={medical.id} className="whitespace-nowrap">
-                  <Cell value={medical.ma_nhom} className="text-zinc-500" />
-                  <Cell value={medical.ma_vtyt_bv} className="font-mono text-xs text-emerald-700" />
-                  <td title={medical.ten_vtyt_bv || undefined} className="max-w-56">
+                <tr key={medical.id} className="group whitespace-nowrap">
+                  <Cell
+                    value={medical.ma_nhom}
+                    maxWidth="max-w-40"
+                    className="sticky left-0 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-emerald-50/30"
+                  />
+                  <Cell
+                    value={medical.ma_vtyt_bv}
+                    maxWidth="max-w-40"
+                    className="sticky left-40 z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-emerald-50/30"
+                  />
+                  <td
+                    title={medical.ten_vtyt_bv || undefined}
+                    className="sticky left-80 z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-emerald-50/30"
+                  >
                     <div className="flex items-center gap-1.5">
                       <span className="truncate font-medium text-zinc-800">
                         {medical.ten_vtyt_bv || "—"}
@@ -528,7 +539,7 @@ export function MedicalTable({
                   <td className="max-w-32">
                     <PercentBar value={medical.phan_tram} />
                   </td>
-                  <td className="sticky right-0 bg-white shadow-[-1px_0_0_0_#e4e4e7]">
+                  <td className="sticky right-0 z-10 bg-white shadow-[-1px_0_0_0_#e4e4e7] group-hover:bg-emerald-50/30">
                     <div className="flex justify-end gap-1.5">
                       <button
                         type="button"
