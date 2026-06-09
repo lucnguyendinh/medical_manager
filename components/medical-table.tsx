@@ -506,16 +506,16 @@ export function MedicalTable({
                   <Cell
                     value={medical.ma_nhom}
                     maxWidth="max-w-40"
-                    className="sticky left-0 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-emerald-50/30"
+                    className="sticky left-0 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-[#f9fefc]"
                   />
                   <Cell
                     value={medical.ma_vtyt_bv}
                     maxWidth="max-w-40"
-                    className="sticky left-40 z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-emerald-50/30"
+                    className="sticky left-40 z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-[#f9fefc]"
                   />
                   <td
                     title={medical.ten_vtyt_bv || undefined}
-                    className="sticky left-80 z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-emerald-50/30"
+                    className="sticky left-80 z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]"
                   >
                     <div className="flex items-center gap-1.5">
                       <span className="truncate font-medium text-zinc-800">
@@ -539,7 +539,7 @@ export function MedicalTable({
                   <td className="max-w-32">
                     <PercentBar value={medical.phan_tram} />
                   </td>
-                  <td className="sticky right-0 z-10 bg-white shadow-[-1px_0_0_0_#e4e4e7] group-hover:bg-emerald-50/30">
+                  <td className="sticky right-0 z-10 bg-white shadow-[-1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]">
                     <div className="flex justify-end gap-1.5">
                       <button
                         type="button"
