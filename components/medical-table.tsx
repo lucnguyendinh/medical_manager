@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Pencil, Info, AlertTriangle, Calendar, ImageIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Pencil, Info, AlertTriangle, Calendar, ImageIcon, Trash2 } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
@@ -44,9 +44,13 @@ type MedicalTableProps = {
   createMedicalAction: (formData: FormData) => Promise<void>;
   updateMedicalAction: (formData: FormData) => Promise<void>;
   deleteMedicalAction: (formData: FormData) => Promise<void>;
+  bulkDeleteMedicalAction: (formData: FormData) => Promise<void>;
   selectedMonth: number;
   selectedWeek: number;
 };
+
+const CHECKBOX_CLASS =
+  "h-4 w-4 shrink-0 cursor-pointer rounded accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 /* ── Field labels (Vietnamese) ── */
 const FIELD_LABELS: Record<string, string> = {
@@ -126,24 +130,37 @@ function MedicalCard({
   medical,
   onEdit,
   deleteMedicalAction,
+  selected,
+  onToggleSelect,
 }: {
   medical: MedicalRow;
   onEdit: () => void;
   deleteMedicalAction: (formData: FormData) => Promise<void>;
+  selected: boolean;
+  onToggleSelect: () => void;
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <p className="truncate text-sm font-semibold text-zinc-900">
-              {medical.ten_vtyt_bv || "—"}
+        <div className="flex min-w-0 items-start gap-3">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggleSelect}
+            aria-label={`Chọn ${medical.ten_vtyt_bv || medical.ma_vtyt_bv || "vật tư"}`}
+            className={`${CHECKBOX_CLASS} mt-0.5`}
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="truncate text-sm font-semibold text-zinc-900">
+                {medical.ten_vtyt_bv || "—"}
+              </p>
+              <MediaCountBadge count={medical.media.length} />
+            </div>
+            <p className="mt-0.5 truncate font-mono text-xs text-emerald-700">
+              {medical.ma_vtyt_bv || "—"}
             </p>
-            <MediaCountBadge count={medical.media.length} />
           </div>
-          <p className="mt-0.5 truncate font-mono text-xs text-emerald-700">
-            {medical.ma_vtyt_bv || "—"}
-          </p>
         </div>
         <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
           {medical.company || "—"}
@@ -422,6 +439,7 @@ export function MedicalTable({
   createMedicalAction,
   updateMedicalAction,
   deleteMedicalAction,
+  bulkDeleteMedicalAction,
   selectedMonth,
   selectedWeek,
 }: MedicalTableProps) {
@@ -429,9 +447,56 @@ export function MedicalTable({
   // Store only the id — derive the full row from the live medicalRows prop
   // so the form always reflects the latest server data after a save.
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const visibleIds = medicalRows.map((row) => row.id);
+  const visibleIdSet = useMemo(() => new Set(visibleIds), [visibleIds]);
+  const activeSelectedIds = useMemo(
+    () => new Set([...selectedIds].filter((id) => visibleIdSet.has(id))),
+    [selectedIds, visibleIdSet],
+  );
   const editingRow = editingRowId
     ? (medicalRows.find((r) => r.id === editingRowId) ?? null)
     : null;
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => activeSelectedIds.has(id));
+  const someVisibleSelected =
+    visibleIds.some((id) => activeSelectedIds.has(id)) && !allVisibleSelected;
+  const selectedCount = activeSelectedIds.size;
+
+  function toggleRowSelection(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleSelectAllVisible() {
+    setSelectedIds((current) => {
+      if (allVisibleSelected) {
+        const next = new Set(current);
+        for (const id of visibleIds) {
+          next.delete(id);
+        }
+        return next;
+      }
+
+      const next = new Set(current);
+      for (const id of visibleIds) {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function handleBulkDelete(formData: FormData) {
+    await bulkDeleteMedicalAction(formData);
+    setSelectedIds(new Set());
+  }
 
   return (
     <>
@@ -441,7 +506,25 @@ export function MedicalTable({
           <div>
             <h2 className="mm-section-title">Danh sách vật tư y tế</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedCount > 0 ? (
+              <span className="text-xs font-medium text-zinc-500">
+                Đã chọn {selectedCount}
+              </span>
+            ) : null}
+            <form action={handleBulkDelete} className="contents">
+              {Array.from(activeSelectedIds).map((id) => (
+                <input key={id} type="hidden" name="medicalIds" value={id} />
+              ))}
+              <button
+                type="submit"
+                disabled={selectedCount === 0}
+                className="mm-btn-danger mm-btn-sm flex items-center gap-1 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 size={13} />
+                Xóa đã chọn
+              </button>
+            </form>
             <span className="flex items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
               <Calendar size={11} />
               Tháng {selectedMonth} — Tuần {selectedWeek}
@@ -468,6 +551,8 @@ export function MedicalTable({
                 medical={medical}
                 onEdit={() => setEditingRowId(medical.id)}
                 deleteMedicalAction={deleteMedicalAction}
+                selected={activeSelectedIds.has(medical.id)}
+                onToggleSelect={() => toggleRowSelection(medical.id)}
               />
             ))
           )}
@@ -478,9 +563,24 @@ export function MedicalTable({
           <table className="mm-table">
             <thead>
               <tr>
-                <th className="sticky left-0 z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_nhom}</th>
-                <th className="sticky left-40 z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_vtyt_bv}</th>
-                <th className="sticky left-80 z-20 w-56 min-w-56 max-w-56 bg-zinc-50 shadow-[1px_0_0_0_#e4e4e7]">{FIELD_LABELS.ten_vtyt_bv}</th>
+                <th className="sticky left-0 z-20 w-10 min-w-10 max-w-10 bg-zinc-50 px-3">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    ref={(element) => {
+                      if (element) {
+                        element.indeterminate = someVisibleSelected;
+                      }
+                    }}
+                    onChange={toggleSelectAllVisible}
+                    disabled={medicalRows.length === 0}
+                    aria-label="Chọn tất cả trên trang"
+                    className={CHECKBOX_CLASS}
+                  />
+                </th>
+                <th className="sticky left-10 z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_nhom}</th>
+                <th className="sticky left-[12.5rem] z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_vtyt_bv}</th>
+                <th className="sticky left-[22.5rem] z-20 w-56 min-w-56 max-w-56 bg-zinc-50 shadow-[1px_0_0_0_#e4e4e7]">{FIELD_LABELS.ten_vtyt_bv}</th>
                 <th>{FIELD_LABELS.don_vi_tinh}</th>
                 <th>{FIELD_LABELS.ma_hieu}</th>
                 <th>{FIELD_LABELS.hang_sx}</th>
@@ -496,26 +596,35 @@ export function MedicalTable({
             <tbody>
               {medicalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="py-10 text-center text-zinc-400">
+                  <td colSpan={14} className="py-10 text-center text-zinc-400">
                     Không có bản ghi nào.
                   </td>
                 </tr>
               ) : null}
               {medicalRows.map((medical) => (
                 <tr key={medical.id} className="group whitespace-nowrap">
+                  <td className="sticky left-0 z-10 w-10 min-w-10 max-w-10 bg-white px-3 group-hover:bg-[#f9fefc]">
+                    <input
+                      type="checkbox"
+                      checked={activeSelectedIds.has(medical.id)}
+                      onChange={() => toggleRowSelection(medical.id)}
+                      aria-label={`Chọn ${medical.ten_vtyt_bv || medical.ma_vtyt_bv || "vật tư"}`}
+                      className={CHECKBOX_CLASS}
+                    />
+                  </td>
                   <Cell
                     value={medical.ma_nhom}
                     maxWidth="max-w-40"
-                    className="sticky left-0 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-[#f9fefc]"
+                    className="sticky left-10 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-[#f9fefc]"
                   />
                   <Cell
                     value={medical.ma_vtyt_bv}
                     maxWidth="max-w-40"
-                    className="sticky left-40 z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-[#f9fefc]"
+                    className="sticky left-[12.5rem] z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-[#f9fefc]"
                   />
                   <td
                     title={medical.ten_vtyt_bv || undefined}
-                    className="sticky left-80 z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]"
+                    className="sticky left-[22.5rem] z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]"
                   >
                     <div className="flex items-center gap-1.5">
                       <span className="truncate font-medium text-zinc-800">

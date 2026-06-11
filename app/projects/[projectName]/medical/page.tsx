@@ -383,6 +383,34 @@ export default async function ProjectMedicalPage({
     revalidatePath(basePath);
   }
 
+  async function bulkDeleteMedicalAction(formData: FormData) {
+    "use server";
+    const actor = await requireUser();
+    await connectToDatabase();
+
+    const medicalIds = formData
+      .getAll("medicalIds")
+      .filter((id): id is string => typeof id === "string" && id.trim() !== "");
+
+    for (const medicalId of medicalIds) {
+      const existing = await Medical.findById(medicalId).lean();
+      if (!existing || existing.project !== resolvedProjectName) {
+        continue;
+      }
+
+      if (
+        !actor.isAdmin &&
+        !canManageMedicalRecord(actor, existing.company, existing.project)
+      ) {
+        continue;
+      }
+
+      await Medical.findByIdAndUpdate(medicalId, { is_delete: true });
+    }
+
+    revalidatePath(basePath);
+  }
+
   async function importMedicalCsvAction(formData: FormData) {
     "use server";
     await requireAdmin();
@@ -616,6 +644,7 @@ export default async function ProjectMedicalPage({
         createMedicalAction={createMedicalAction}
         updateMedicalAction={updateMedicalAction}
         deleteMedicalAction={deleteMedicalAction}
+        bulkDeleteMedicalAction={bulkDeleteMedicalAction}
         selectedMonth={monthFilter}
         selectedWeek={weekFilter}
       />
