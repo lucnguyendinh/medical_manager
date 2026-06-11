@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Pencil, Info, AlertTriangle, Calendar, ImageIcon, Trash2 } from "lucide-react";
+import { Plus, Pencil, Info, AlertTriangle, Calendar, ImageIcon, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { FormField } from "@/components/ui/form-field";
@@ -9,6 +9,11 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { MediaUploader } from "@/components/ui/media-uploader";
 import { SubmitButton } from "@/components/submit-button";
 import type { MedicalMedia } from "@/lib/medical-media";
+import {
+  buildMedicalSortHref,
+  type MedicalListQueryParams,
+  type MedicalSortField,
+} from "@/lib/medical-list-sort";
 
 type CompanyOption = {
   id: string;
@@ -47,6 +52,8 @@ type MedicalTableProps = {
   bulkDeleteMedicalAction: (formData: FormData) => Promise<void>;
   selectedMonth: number;
   selectedWeek: number;
+  basePath: string;
+  listQuery: Omit<MedicalListQueryParams, "page">;
 };
 
 const CHECKBOX_CLASS =
@@ -116,6 +123,41 @@ function PercentBar({ value, barWidth = "w-16" }: { value: string; barWidth?: st
   );
 }
 
+function SortableHeader({
+  label,
+  field,
+  sort,
+  dir,
+  basePath,
+  listQuery,
+  className,
+}: {
+  label: string;
+  field: MedicalSortField;
+  sort: MedicalSortField;
+  dir: MedicalListQueryParams["dir"];
+  basePath: string;
+  listQuery: Omit<MedicalListQueryParams, "page">;
+  className?: string;
+}) {
+  const isActive = sort === field;
+  const SortIcon = isActive ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+
+  return (
+    <th className={className}>
+      <a
+        href={buildMedicalSortHref(basePath, listQuery, field)}
+        className={`inline-flex items-center gap-1 hover:text-emerald-700 ${
+          isActive ? "font-semibold text-emerald-700" : ""
+        }`}
+      >
+        <span>{label}</span>
+        <SortIcon size={12} className={isActive ? "text-emerald-600" : "text-zinc-400"} />
+      </a>
+    </th>
+  );
+}
+
 /* ── Mobile card — stacked layout shown below the `md` breakpoint ── */
 function MobileField({ label, value }: { label: string; value: string }) {
   return (
@@ -132,24 +174,28 @@ function MedicalCard({
   deleteMedicalAction,
   selected,
   onToggleSelect,
+  canDelete,
 }: {
   medical: MedicalRow;
   onEdit: () => void;
   deleteMedicalAction: (formData: FormData) => Promise<void>;
   selected: boolean;
   onToggleSelect: () => void;
+  canDelete: boolean;
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={onToggleSelect}
-            aria-label={`Chọn ${medical.ten_vtyt_bv || medical.ma_vtyt_bv || "vật tư"}`}
-            className={`${CHECKBOX_CLASS} mt-0.5`}
-          />
+          {canDelete ? (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelect}
+              aria-label={`Chọn ${medical.ten_vtyt_bv || medical.ma_vtyt_bv || "vật tư"}`}
+              className={`${CHECKBOX_CLASS} mt-0.5`}
+            />
+          ) : null}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="truncate text-sm font-semibold text-zinc-900">
@@ -195,10 +241,12 @@ function MedicalCard({
             <Pencil size={12} />
             Sửa
           </button>
-          <form action={deleteMedicalAction} className="contents">
-            <input type="hidden" name="medicalId" value={medical.id} />
-            <SubmitButton label="Xóa" pendingLabel="..." className="mm-btn-danger mm-btn-sm" />
-          </form>
+          {canDelete ? (
+            <form action={deleteMedicalAction} className="contents">
+              <input type="hidden" name="medicalId" value={medical.id} />
+              <SubmitButton label="Xóa" pendingLabel="..." className="mm-btn-danger mm-btn-sm" />
+            </form>
+          ) : null}
         </div>
       </div>
     </div>
@@ -442,6 +490,8 @@ export function MedicalTable({
   bulkDeleteMedicalAction,
   selectedMonth,
   selectedWeek,
+  basePath,
+  listQuery,
 }: MedicalTableProps) {
   const [isCreateOpen, setCreateOpen] = useState(false);
   // Store only the id — derive the full row from the live medicalRows prop
@@ -462,6 +512,26 @@ export function MedicalTable({
   const someVisibleSelected =
     visibleIds.some((id) => activeSelectedIds.has(id)) && !allVisibleSelected;
   const selectedCount = activeSelectedIds.size;
+  const canDelete = canEditAllFields;
+  const tableColSpan = canDelete ? 14 : 13;
+  const stickyMaNhomClass = canDelete
+    ? "sticky left-10 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-[#f9fefc]"
+    : "sticky left-0 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-[#f9fefc]";
+  const stickyMaVtytClass = canDelete
+    ? "sticky left-[12.5rem] z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-[#f9fefc]"
+    : "sticky left-40 z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-[#f9fefc]";
+  const stickyTenVtytClass = canDelete
+    ? "sticky left-[22.5rem] z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]"
+    : "sticky left-80 z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]";
+  const headerStickyMaNhomClass = canDelete
+    ? "sticky left-10 z-20 w-40 min-w-40 max-w-40 bg-zinc-50"
+    : "sticky left-0 z-20 w-40 min-w-40 max-w-40 bg-zinc-50";
+  const headerStickyMaVtytClass = canDelete
+    ? "sticky left-[12.5rem] z-20 w-40 min-w-40 max-w-40 bg-zinc-50"
+    : "sticky left-40 z-20 w-40 min-w-40 max-w-40 bg-zinc-50";
+  const headerStickyTenVtytClass = canDelete
+    ? "sticky left-[22.5rem] z-20 w-56 min-w-56 max-w-56 bg-zinc-50 shadow-[1px_0_0_0_#e4e4e7]"
+    : "sticky left-80 z-20 w-56 min-w-56 max-w-56 bg-zinc-50 shadow-[1px_0_0_0_#e4e4e7]";
 
   function toggleRowSelection(id: string) {
     setSelectedIds((current) => {
@@ -507,24 +577,26 @@ export function MedicalTable({
             <h2 className="mm-section-title">Danh sách vật tư y tế</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {selectedCount > 0 ? (
+            {canDelete && selectedCount > 0 ? (
               <span className="text-xs font-medium text-zinc-500">
                 Đã chọn {selectedCount}
               </span>
             ) : null}
-            <form action={handleBulkDelete} className="contents">
-              {Array.from(activeSelectedIds).map((id) => (
-                <input key={id} type="hidden" name="medicalIds" value={id} />
-              ))}
-              <button
-                type="submit"
-                disabled={selectedCount === 0}
-                className="mm-btn-danger mm-btn-sm flex items-center gap-1 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Trash2 size={13} />
-                Xóa đã chọn
-              </button>
-            </form>
+            {canDelete ? (
+              <form action={handleBulkDelete} className="contents">
+                {Array.from(activeSelectedIds).map((id) => (
+                  <input key={id} type="hidden" name="medicalIds" value={id} />
+                ))}
+                <button
+                  type="submit"
+                  disabled={selectedCount === 0}
+                  className="mm-btn-danger mm-btn-sm flex items-center gap-1 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 size={13} />
+                  Xóa đã chọn
+                </button>
+              </form>
+            ) : null}
             <span className="flex items-center gap-1.5 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
               <Calendar size={11} />
               Tháng {selectedMonth} — Tuần {selectedWeek}
@@ -553,6 +625,7 @@ export function MedicalTable({
                 deleteMedicalAction={deleteMedicalAction}
                 selected={activeSelectedIds.has(medical.id)}
                 onToggleSelect={() => toggleRowSelection(medical.id)}
+                canDelete={canDelete}
               />
             ))
           )}
@@ -563,69 +636,105 @@ export function MedicalTable({
           <table className="mm-table">
             <thead>
               <tr>
-                <th className="sticky left-0 z-20 w-10 min-w-10 max-w-10 bg-zinc-50 px-3">
-                  <input
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    ref={(element) => {
-                      if (element) {
-                        element.indeterminate = someVisibleSelected;
-                      }
-                    }}
-                    onChange={toggleSelectAllVisible}
-                    disabled={medicalRows.length === 0}
-                    aria-label="Chọn tất cả trên trang"
-                    className={CHECKBOX_CLASS}
-                  />
-                </th>
-                <th className="sticky left-10 z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_nhom}</th>
-                <th className="sticky left-[12.5rem] z-20 w-40 min-w-40 max-w-40 bg-zinc-50">{FIELD_LABELS.ma_vtyt_bv}</th>
-                <th className="sticky left-[22.5rem] z-20 w-56 min-w-56 max-w-56 bg-zinc-50 shadow-[1px_0_0_0_#e4e4e7]">{FIELD_LABELS.ten_vtyt_bv}</th>
+                {canDelete ? (
+                  <th className="sticky left-0 z-20 w-10 min-w-10 max-w-10 bg-zinc-50 px-3">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      ref={(element) => {
+                        if (element) {
+                          element.indeterminate = someVisibleSelected;
+                        }
+                      }}
+                      onChange={toggleSelectAllVisible}
+                      disabled={medicalRows.length === 0}
+                      aria-label="Chọn tất cả trên trang"
+                      className={CHECKBOX_CLASS}
+                    />
+                  </th>
+                ) : null}
+                <th className={headerStickyMaNhomClass}>{FIELD_LABELS.ma_nhom}</th>
+                <th className={headerStickyMaVtytClass}>{FIELD_LABELS.ma_vtyt_bv}</th>
+                <SortableHeader
+                  label={FIELD_LABELS.ten_vtyt_bv}
+                  field="ten_vtyt_bv"
+                  sort={listQuery.sort}
+                  dir={listQuery.dir}
+                  basePath={basePath}
+                  listQuery={listQuery}
+                  className={headerStickyTenVtytClass}
+                />
                 <th>{FIELD_LABELS.don_vi_tinh}</th>
                 <th>{FIELD_LABELS.ma_hieu}</th>
                 <th>{FIELD_LABELS.hang_sx}</th>
-                <th>{FIELD_LABELS.don_gia}</th>
-                <th>{FIELD_LABELS.company}</th>
+                <SortableHeader
+                  label={FIELD_LABELS.don_gia}
+                  field="don_gia"
+                  sort={listQuery.sort}
+                  dir={listQuery.dir}
+                  basePath={basePath}
+                  listQuery={listQuery}
+                />
+                <SortableHeader
+                  label={FIELD_LABELS.company}
+                  field="company"
+                  sort={listQuery.sort}
+                  dir={listQuery.dir}
+                  basePath={basePath}
+                  listQuery={listQuery}
+                />
                 <th>{FIELD_LABELS.dinh_muc}</th>
-                <th>{FIELD_LABELS.so_luong}</th>
-                <th>{FIELD_LABELS.so_luong_su_dung}</th>
-                <th>{FIELD_LABELS.phan_tram}</th>
+                <SortableHeader
+                  label={FIELD_LABELS.so_luong}
+                  field="so_luong"
+                  sort={listQuery.sort}
+                  dir={listQuery.dir}
+                  basePath={basePath}
+                  listQuery={listQuery}
+                />
+                <SortableHeader
+                  label={FIELD_LABELS.so_luong_su_dung}
+                  field="so_luong_su_dung"
+                  sort={listQuery.sort}
+                  dir={listQuery.dir}
+                  basePath={basePath}
+                  listQuery={listQuery}
+                />
+                <SortableHeader
+                  label={FIELD_LABELS.phan_tram}
+                  field="phan_tram"
+                  sort={listQuery.sort}
+                  dir={listQuery.dir}
+                  basePath={basePath}
+                  listQuery={listQuery}
+                />
                 <th className="sticky right-0 bg-zinc-50 text-right shadow-[-1px_0_0_0_#e4e4e7]">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {medicalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="py-10 text-center text-zinc-400">
+                  <td colSpan={tableColSpan} className="py-10 text-center text-zinc-400">
                     Không có bản ghi nào.
                   </td>
                 </tr>
               ) : null}
               {medicalRows.map((medical) => (
                 <tr key={medical.id} className="group whitespace-nowrap">
-                  <td className="sticky left-0 z-10 w-10 min-w-10 max-w-10 bg-white px-3 group-hover:bg-[#f9fefc]">
-                    <input
-                      type="checkbox"
-                      checked={activeSelectedIds.has(medical.id)}
-                      onChange={() => toggleRowSelection(medical.id)}
-                      aria-label={`Chọn ${medical.ten_vtyt_bv || medical.ma_vtyt_bv || "vật tư"}`}
-                      className={CHECKBOX_CLASS}
-                    />
-                  </td>
-                  <Cell
-                    value={medical.ma_nhom}
-                    maxWidth="max-w-40"
-                    className="sticky left-10 z-10 w-40 min-w-40 bg-white text-zinc-500 group-hover:bg-[#f9fefc]"
-                  />
-                  <Cell
-                    value={medical.ma_vtyt_bv}
-                    maxWidth="max-w-40"
-                    className="sticky left-[12.5rem] z-10 w-40 min-w-40 bg-white font-mono text-xs text-emerald-700 group-hover:bg-[#f9fefc]"
-                  />
-                  <td
-                    title={medical.ten_vtyt_bv || undefined}
-                    className="sticky left-[22.5rem] z-10 w-56 min-w-56 max-w-56 bg-white shadow-[1px_0_0_0_#e4e4e7] group-hover:bg-[#f9fefc]"
-                  >
+                  {canDelete ? (
+                    <td className="sticky left-0 z-10 w-10 min-w-10 max-w-10 bg-white px-3 group-hover:bg-[#f9fefc]">
+                      <input
+                        type="checkbox"
+                        checked={activeSelectedIds.has(medical.id)}
+                        onChange={() => toggleRowSelection(medical.id)}
+                        aria-label={`Chọn ${medical.ten_vtyt_bv || medical.ma_vtyt_bv || "vật tư"}`}
+                        className={CHECKBOX_CLASS}
+                      />
+                    </td>
+                  ) : null}
+                  <Cell value={medical.ma_nhom} maxWidth="max-w-40" className={stickyMaNhomClass} />
+                  <Cell value={medical.ma_vtyt_bv} maxWidth="max-w-40" className={stickyMaVtytClass} />
+                  <td title={medical.ten_vtyt_bv || undefined} className={stickyTenVtytClass}>
                     <div className="flex items-center gap-1.5">
                       <span className="truncate font-medium text-zinc-800">
                         {medical.ten_vtyt_bv || "—"}
@@ -659,14 +768,16 @@ export function MedicalTable({
                         <Pencil size={12} />
                         Sửa
                       </button>
-                      <form action={deleteMedicalAction} className="contents">
-                        <input type="hidden" name="medicalId" value={medical.id} />
-                        <SubmitButton
-                          label="Xóa"
-                          pendingLabel="..."
-                          className="mm-btn-danger mm-btn-sm"
-                        />
-                      </form>
+                      {canDelete ? (
+                        <form action={deleteMedicalAction} className="contents">
+                          <input type="hidden" name="medicalId" value={medical.id} />
+                          <SubmitButton
+                            label="Xóa"
+                            pendingLabel="..."
+                            className="mm-btn-danger mm-btn-sm"
+                          />
+                        </form>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

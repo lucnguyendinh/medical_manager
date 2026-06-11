@@ -5,7 +5,12 @@ import { Search, CheckCircle2, XCircle, FileSpreadsheet } from "lucide-react";
 import { canManageMedicalRecord, requireAdmin, requireUser, userCompaniesInProject } from "@/lib/authz";
 import { connectToDatabase } from "@/lib/db";
 import { defaultMedicalMonthWeek, resolveMedicalMonthFilter, resolveMedicalWeekFilter } from "@/lib/medical-period";
-import { buildMedicalListMatch } from "@/lib/medical-list-match";
+import { fetchMedicalListPage } from "@/lib/medical-list-query";
+import {
+  buildMedicalListHref,
+  resolveMedicalSortDirection,
+  resolveMedicalSortField,
+} from "@/lib/medical-list-sort";
 import { ensureRequiredHeaders, parseCsvFile } from "@/lib/csv-import";
 import { cloudinary, cloudinaryConfig } from "@/lib/cloudinary";
 import { parseMediaJson } from "@/lib/medical-media";
@@ -79,6 +84,8 @@ export default async function ProjectMedicalPage({
     month?: string;
     week?: string;
     page?: string;
+    sort?: string;
+    dir?: string;
     importStatus?: string;
     importMessage?: string;
   }>;
@@ -106,6 +113,16 @@ export default async function ProjectMedicalPage({
   const monthFilter = resolveMedicalMonthFilter(query.month, periodDefaults.month);
   const weekFilter = resolveMedicalWeekFilter(query.week, periodDefaults.week);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
+  const sortField = resolveMedicalSortField(query.sort);
+  const sortDir = resolveMedicalSortDirection(query.dir);
+  const listQuery = {
+    q,
+    company: companyFilter,
+    month: monthFilter,
+    week: weekFilter,
+    sort: sortField,
+    dir: sortDir,
+  };
 
   const companies = user.isAdmin
     ? await ProjectCompany.find({ project: resolvedProjectName })
@@ -118,21 +135,18 @@ export default async function ProjectMedicalPage({
         .sort({ name: 1 })
         .lean();
 
-  const matchQuery = buildMedicalListMatch({
+  const { totalCount, rows: medicalRows } = await fetchMedicalListPage({
     projectName: resolvedProjectName,
     user,
     q,
     companyFilter,
+    sortField,
+    sortDir,
+    month: monthFilter,
+    week: weekFilter,
+    page,
+    pageSize: PAGE_SIZE,
   });
-
-  const [totalCount, medicalRows] = await Promise.all([
-    Medical.countDocuments(matchQuery),
-    Medical.find(matchQuery)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .lean(),
-  ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const basePath = `/projects/${encodeURIComponent(resolvedProjectName)}/medical`;
@@ -364,18 +378,14 @@ export default async function ProjectMedicalPage({
   async function deleteMedicalAction(formData: FormData) {
     "use server";
     const actor = await requireUser();
+    if (!actor.isAdmin) {
+      return;
+    }
     await connectToDatabase();
 
     const medicalId = readFormText(formData, "medicalId");
     const existing = await Medical.findById(medicalId).lean();
     if (!existing || existing.project !== resolvedProjectName) {
-      return;
-    }
-
-    if (
-      !actor.isAdmin &&
-      !canManageMedicalRecord(actor, existing.company, existing.project)
-    ) {
       return;
     }
 
@@ -386,6 +396,9 @@ export default async function ProjectMedicalPage({
   async function bulkDeleteMedicalAction(formData: FormData) {
     "use server";
     const actor = await requireUser();
+    if (!actor.isAdmin) {
+      return;
+    }
     await connectToDatabase();
 
     const medicalIds = formData
@@ -395,13 +408,6 @@ export default async function ProjectMedicalPage({
     for (const medicalId of medicalIds) {
       const existing = await Medical.findById(medicalId).lean();
       if (!existing || existing.project !== resolvedProjectName) {
-        continue;
-      }
-
-      if (
-        !actor.isAdmin &&
-        !canManageMedicalRecord(actor, existing.company, existing.project)
-      ) {
         continue;
       }
 
@@ -522,7 +528,14 @@ export default async function ProjectMedicalPage({
         <div className="flex flex-wrap items-center justify-end gap-2">
           <ProjectTabs projectName={resolvedProjectName} current="medical" />
           <a
-            href={`/api/projects/${encodeURIComponent(resolvedProjectName)}/medical/export?month=${monthFilter}&week=${weekFilter}&company=${encodeURIComponent(companyFilter)}&q=${encodeURIComponent(q)}`}
+            href={`/api/projects/${encodeURIComponent(resolvedProjectName)}/medical/export?${new URLSearchParams({
+              month: String(monthFilter),
+              week: String(weekFilter),
+              ...(companyFilter ? { company: companyFilter } : {}),
+              ...(q ? { q } : {}),
+              ...(sortField !== "ten_vtyt_bv" ? { sort: sortField } : {}),
+              ...(sortDir !== "asc" ? { dir: sortDir } : {}),
+            }).toString()}`}
             className="mm-btn-secondary text-xs"
             download
             title="Xuất toàn bộ vật tư khớp bộ lọc hiện tại (tất cả trang, không chỉ trang đang xem)."
@@ -599,6 +612,8 @@ export default async function ProjectMedicalPage({
             <Search size={13} />
             Tìm kiếm
           </button>
+          <input type="hidden" name="sort" value={sortField} />
+          <input type="hidden" name="dir" value={sortDir} />
         </form>
       </section>
       <MedicalTable
@@ -647,6 +662,8 @@ export default async function ProjectMedicalPage({
         bulkDeleteMedicalAction={bulkDeleteMedicalAction}
         selectedMonth={monthFilter}
         selectedWeek={weekFilter}
+        basePath={basePath}
+        listQuery={listQuery}
       />
 
       <PaginationBar
@@ -654,7 +671,7 @@ export default async function ProjectMedicalPage({
         totalPages={totalPages}
         totalCount={totalCount}
         buildPageHref={(pageNumber) =>
-          `${basePath}?q=${encodeURIComponent(q)}&company=${encodeURIComponent(companyFilter)}&month=${monthFilter}&week=${weekFilter}&page=${pageNumber}`
+          buildMedicalListHref(basePath, { ...listQuery, page: pageNumber })
         }
       />
     </PageShell>
